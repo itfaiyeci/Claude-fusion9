@@ -18,6 +18,27 @@ const WARMUP_END_LEVEL=0;
 // biraz artıyor (tamamen telafi etmiyor — hâlâ zorluk var — ama artık
 // yoğun levellerde oyuncuyu cezalandırmıyor).
 const DIFFICULTY_TIERS=[["kolay",1.30,0.0,0.70],["orta",1.10,0.15,0.80],["zor",1.00,0.35,0.90],["uzman",1.05,0.55,1.00],["pro",1.10,0.80,0.85]];
+// [Oturum 64 — kullanıcı isteği] Öğretim müfredatı: ilk 10 bölüm (level
+// 1-10, 11-20, ... 91-100), her biri TEK bir eşleşme/terfi mekanizmasına
+// odaklanır. "create" = o grup boyutunda bir eşleşme yapmak DOĞRUDAN o
+// hediyeyi oluşturur (GROUP_TO_GIFT, bkz. rules/evolutionRules.js).
+// "promote" = var olan bir hediyeyi 9'larla haç şeklinde birleştirip bir
+// üst kademeye terfi ettirmek (GIFT_PROMO_CROSS_SIZE, aynı dosya).
+// features/hint/hint-system.js bu tabloyu okuyup ilgili hamleyi öncelikli
+// gösteriyor; generateLevel() blocker yoğunluğunu bu bölümlerde düşürüyor
+// (bkz. _tutorialDampen, aşağıda) — tahta kalabalık olmasın diye.
+const TUTORIAL_CURRICULUM = {
+  1:  { kind:"create",  group:"a",     label:"3'lü eşleşme → Bakır" },
+  2:  { kind:"create",  group:"b",     label:"4'lü eşleşme → Bronz" },
+  3:  { kind:"create",  group:"c",     label:"5'li eşleşme → Gümüş" },
+  4:  { kind:"create",  group:"d",     label:"6'lı eşleşme → Altın" },
+  5:  { kind:"create",  group:"e",     label:"7'li eşleşme → Elmas" },
+  6:  { kind:"promote", gift:"bakir",  label:"Bakır + 9 → Bronz" },
+  7:  { kind:"promote", gift:"bronz",  label:"Bronz + 9 → Gümüş" },
+  8:  { kind:"promote", gift:"gumus",  label:"Gümüş + 9 → Altın" },
+  9:  { kind:"promote", gift:"altin",  label:"Altın + 9 → Elmas" },
+  10: { kind:"promote", gift:"elmas",  label:"Elmas + 9 → Matrix Eşleşme" },
+};
 
 // Tier'a göre hedef skor (21 hamlede 3 eşleşme kriteri)
 
@@ -313,11 +334,24 @@ function generateLevel(levelNumber,seed=0){
   const _pacingMult  = _isBossLvl ? 1.5 : _isBreathLvl ? 0.65 : _isHardLvl ? 1.25 : 1.0;
 
   let targetScore=Math.round(BASE_TARGET_SCORE*targetMult*targetCycleScale*_pacingMult*(isBreathe?breatheMult:1.0));
-  const density=Math.min(0.9,densityBase*(1.0+Math.min(0.5,Math.log1p(cycleNumber)*0.08))*(isBreathe?0.6:1.0));
-
-  const milestone=MILESTONES[levelNumber]||null;
 
   const _chapterNum = Math.ceil(levelNumber / 10) || 1;
+  // [Oturum 64 — kullanıcı isteği: "ilk levelde oyuncunun tüm şekilleri
+  // yapmasını beklemeyelim, ısınma yapalım" + "tahta kalabalık"]
+  // İlk 10 bölüm artık bir eşleşme/terfi ÖĞRETİM MÜFREDATI (bkz.
+  // HANDOFF.md "Öğretim müfredatı" tablosu — bölüm 1=3'lü, 2=4'lü,
+  // 3=5'li, 4=6'lı, 5=7'li (doğrudan oluşturma), 6=3'lü+9, 7=4'lü+9,
+  // 8=5'li+9, 9=6'lı+9, 10=7'li+9 (terfi)). Oyuncu tek bir mekanizmaya
+  // odaklanabilsin diye bu 10 bölümde engel yoğunluğu ÖNEMLİ ÖLÇÜDE
+  // düşürüldü — tahta "kalabalık" olmasın, hedef şekli görmek/kurmak
+  // kolay olsun. Bölüm 1-5 (doğrudan oluşturma, daha basit) neredeyse
+  // temiz tahta; 6-10 (terfi, tahtada zaten hediye+9 olması gerekiyor,
+  // biraz daha karmaşık ama yine de normalden çok daha az) orta düzey.
+  // Bölüm 11+ dokunulmadı, eski formül aynen çalışıyor.
+  const _tutorialDampen = _chapterNum<=5 ? 0.15 : _chapterNum<=10 ? 0.35 : 1.0;
+  const density=Math.min(0.9,densityBase*(1.0+Math.min(0.5,Math.log1p(cycleNumber)*0.08))*(isBreathe?0.6:1.0)*_tutorialDampen);
+
+  const milestone=MILESTONES[levelNumber]||null;
 
   // ── SİNÜZOİDAL PACING — dalgalı zorluk eğrisi ────────
   // Her 5 levelde: 3 normal → 1 zor → 1 nefes
@@ -342,7 +376,7 @@ function generateLevel(levelNumber,seed=0){
   // [Oturum 18] "pattern" alanı eklendi — kullanıcının onayladığı kanonik
   // şemaya uysun diye (level/moves/targetScore/pattern/density).
   // blockerLayout._patternName zaten vardı, sadece üst seviyeye taşındı.
-  const result={levelNumber,tierName,moves,targetScore,blockerLayout,blockerDensity:density,pattern:blockerLayout._patternName??null,isBreathe,milestone};
+  const result={levelNumber,tierName,moves,targetScore,blockerLayout,blockerDensity:density,pattern:blockerLayout._patternName??null,isBreathe,milestone,tutorialFocus:TUTORIAL_CURRICULUM[_chapterNum]??null};
   if (levelNumber !== state._lastGeneratedLevel) {
     state._lastGeneratedLevel = levelNumber;
     F9Debug.log("game", `Level ${levelNumber} üretildi: ${tierName}${isBreathe?" [NEFES]":""}${milestone?" [MILESTONE:"+milestone.icon+"]":""}`,

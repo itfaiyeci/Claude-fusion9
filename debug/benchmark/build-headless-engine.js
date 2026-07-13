@@ -27,7 +27,10 @@ const MANIFEST = require(path.join(ROOT, "build/manifest.js"));
 // [Oturum 25] getLevelGoal() içine eklenen 1 satırlık yorum yüzünden bu
 // sınır 349'dan 352'ye kaydı — eski değer F9Debug.log() çağrısının
 // ORTASINDAN kesip sözdizimi hatası veriyordu (bkz. README.md Oturum 25).
-const PURE_ENGINE_END_LINE = 352;
+// [Oturum 64] TUTORIAL_CURRICULUM tablosu + _tutorialDampen bloğu
+// eklenince sınır 352'den 386'ya kaydı — AYNI hata (yarım kesme,
+// sözdizimi hatası) tekrar yaşandı, bu sefer hemen yakalanıp düzeltildi.
+const PURE_ENGINE_END_LINE = 386;
 
 function build() {
   const parts = [];
