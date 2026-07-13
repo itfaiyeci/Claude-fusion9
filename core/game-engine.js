@@ -369,7 +369,7 @@ const root = document.getElementById("f9-root");
 // isteğiyle şu an 5 dakikada (300sn) bir veriliyor ki tüm döngü hızlıca
 // test edilebilsin — "ileride düzeltiriz" (kullanıcının kendi ifadesi).
 // ÜRETİME ÇIKMADAN ÖNCE bu bayrağı false yapıp gerçek 1 saate dönün.
-const HOURLY_REWARD_TEST_MODE = False;
+const HOURLY_REWARD_TEST_MODE = false;
 const HOURLY_REWARD_TEST_SEC  = 300;  // 5 dakika (sadece test modunda kullanılır)
 const HOURLY_REWARD_REAL_SEC  = 3600; // 1 saat (gerçek/üretim değeri)
 
