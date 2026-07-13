@@ -405,21 +405,23 @@ hem headless bundle bunu kullanır, elle iki yerde tutmuyoruz artık).
    GERÇEK swap hamleleriyle başarıyla inşa etti — hepsi teorik olarak
    ERİŞİLEBİLİR, sadece greedy/rastgele oynayışta doğal olarak nadir.
 3. **~~YENİ (Oturum 32) — `b4_05`/`b4_07` aynı 4 hücreyi paylaşıyor,
-   `b4_07` yapısal olarak asla tetiklenemez.~~ → ÇÖZÜLDÜ (Oturum 60),
-   seçenek (c).** Kullanıcının orijinal listesinde `LINE_4` için de
-   aynı "aynı hücreler, iki spawn" deseni olduğu görülünce (zaten
-   `LINE_4_SPAWN_OFFSETS` + `findLineMatches()`'te ÇALIŞAN bir mekanizma
-   olarak var), aynı mekanizma buraya da uygulandı: `b4_05`+`b4_07`
-   tek şekle (`b4_dual`, `rules/matchRules.js`) birleşti, spawn artık
-   son hamlenin pozisyonuna göre seçiliyor (yoksa varsayılana düşüyor).
-   `engine/matchEngine.js findAllMatches()`'e tek satır eklendi.
-   `debug/benchmark/shape-coverage-report.js`, `strategic-shape-bot.js`
-   (34 sabit şekil, `b4_dual` artık line-tarzı ayrı test ediliyor —
-   ALL_FIXED_SHAPES'te değil, mevcut line3/4/5 emsaliyle tutarlı) ve
-   `debug/build-shape-lab.js` (48 model sayısı KORUNDU: 34+14) buna göre
-   güncellendi. Doğrulama: `strategic-shape-bot.js all` → 34/34 başarılı;
-   izole testte her iki spawn ucunun (eski b4_05 VE eski b4_07 pozisyonu)
-   gerçekten farklı `lastMovePos` senaryolarında tetiklendiği kanıtlandı.
+   `b4_07` yapısal olarak asla tetiklenemez.~~ → ÇÖZÜLDÜ (Oturum 61,
+   NİHAİ).** İki aşamalı geçmiş: Oturum 60'ta önce `LINE_4`'teki
+   "tek şekil + spawn seçim mekanizması" deseni denendi (`b4_dual`) —
+   çalışıyordu ama kullanıcı "gereksiz karmaşık, b4_07 gerçekten farklı
+   bir şekil olsun" dedi. Oturum 61'de `b4_07`, `b4_06`'nın GERÇEK
+   aynası (sütun ekseninde, `c→1-c`) olarak yeniden tanımlandı: hücreler
+   `[[0,1],[1,1],[2,1],[2,0]]`, spawn `(2,1)`. Kullanıcının ilk önerdiği
+   ham koordinatlar `(0,0)(1,0)(1,1)(1,2)` kontrol edilince `b4_11` ile
+   birebir çakıştığı bulundu (AYNI hata, farklı çift) — düzeltilmiş
+   ayna kullanıldı. `b4_dual`/`B4_DUAL_*` tamamen geri alındı,
+   `debug/benchmark/shape-coverage-report.js`, `strategic-shape-bot.js`,
+   `debug/build-shape-lab.js` orijinal 36 sabit şekil + 12 çizgi
+   varyasyonu haline döndü. **Doğrulama:** tüm 36 şeklin hücreleri
+   birbiriyle programatik olarak karşılaştırıldı (çakışma YOK, spawn
+   her zaman kendi şeklinin İÇİNDE, hücre sayıları grup ile tutarlı),
+   `strategic-shape-bot.js all` → 36/36 gerçek swap hamleleriyle
+   başarıyla inşa edildi.
 
 ## Dosya haritası (hızlı referans)
 
