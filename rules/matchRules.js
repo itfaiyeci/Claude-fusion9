@@ -66,8 +66,8 @@ const BLOCK_5_SHAPES=[
   Sh("b5_08",GROUP_C,[[2,2],[2,1],[2,0],[1,0],[0,0]],[2,0]),
   Sh("b5_09",GROUP_C,[[0,0],[1,0],[2,0],[1,1],[1,2]],[1,0]),
   Sh("b5_10",GROUP_C,[[0,2],[1,2],[2,2],[1,1],[1,0]],[1,2]),
-  Sh("b5_11",GROUP_C,[[0,0],[0,1],[0,2],[1,1],[2,1]],[2,1]),
-  Sh("b5_12",GROUP_C,[[2,0],[2,1],[2,2],[1,1],[0,1]],[0,1]),
+  Sh("b5_11",GROUP_C,[[0,0],[0,1],[0,2],[1,1],[2,1]],[0,1]), // [Oturum 62 — kullanıcı isteği] spawn (2,1)->(0,1) değiştirildi
+  Sh("b5_12",GROUP_C,[[2,0],[2,1],[2,2],[1,1],[0,1]],[2,1]), // [Oturum 62 — kullanıcı isteği] spawn (0,1)->(2,1) değiştirildi
 ];
 
 // 6'lı bloklar — Oturum 30: eski SIX_SHAPES(4) tamamen değiştirildi
