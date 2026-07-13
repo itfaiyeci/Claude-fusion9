@@ -636,7 +636,7 @@ body { margin:0; background: #0B0D1A; /*base64-bg:/9j/4AAQSkZJRgABAQAAAQABAAD/2w
 .f9-progress-track { height:4px; background:#2A241D; border-radius:2px; margin-top:8px; overflow:hidden; }
 .f9-progress-fill { height:100%; background:var(--f9-accent); border-radius:2px; transition: width 0.4s ease; }
 
-.f9-board-container { position: relative; margin-bottom: 10px; width: 100%; box-sizing: border-box; overflow: hidden; }
+.f9-board-container { position: relative; margin-bottom: 10px; width: 100%; box-sizing: border-box; overflow: hidden; touch-action: none; }
 
 /* ── Seçenek Paneli v2 ── */
 #f9-options-area {

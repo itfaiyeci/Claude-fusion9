@@ -323,13 +323,56 @@ function renderBoardOnly() {
 function attachBoardListener() {
   const container = document.getElementById("f9-board-container");
   if (!container || container === _boardListenerEl) return;
-  container.addEventListener("click", (e) => {
-    const cell = e.target.closest(".f9-cell");
-    if (!cell) return;
+
+  // [Oturum 65 — kullanıcı isteği: "telefon ekranı için sürükle bırak
+  // daha iyi, seç seç değil, sürükle bırak popup menü açılsın"]
+  // Sürükle-bırak birincil etkileşim oldu — Pointer Events API
+  // (mouse+dokunma+kalem TEK kod yolu, ayrı touch/mouse dinleyicisi
+  // gerekmiyor). Eski "tıkla-tıkla" (seç-seç) davranışı KORUNDU —
+  // hareket olmadan bırakılan bir dokunma otomatik olarak eski tek
+  // tıklama gibi çalışıyor (geriye dönük uyumlu + erişilebilirlik).
+  // flow/moveFlow.js'e HİÇ DOKUNULMADI — sürükleme sadece
+  // handleCellClick()'i doğru sırada iki kez çağırıyor (1. hücre
+  // pointerdown'da, 2. hücre komşuya girince), aynı test edilmiş oyun
+  // mantığını (popup menü dahil, state.pendingOptions zaten var)
+  // kullanıyor.
+  let _dragStartCell = null;
+  let _dragConsumed = false;
+
+  function _cellFromPoint(x, y) {
+    const el = document.elementFromPoint(x, y);
+    const cell = el && el.closest && el.closest(".f9-cell");
+    if (!cell) return null;
     const r = Number(cell.dataset.r), c = Number(cell.dataset.c);
-    if (isNaN(r) || isNaN(c)) return;
-    handleCellClick(r, c);
+    if (isNaN(r) || isNaN(c)) return null;
+    return { r, c };
+  }
+
+  container.addEventListener("pointerdown", (e) => {
+    const cell = _cellFromPoint(e.clientX, e.clientY);
+    if (!cell) return;
+    _dragStartCell = cell;
+    _dragConsumed = false;
+    handleCellClick(cell.r, cell.c); // 1. hücre — mevcut seçim mantığı
   });
+
+  container.addEventListener("pointermove", (e) => {
+    if (!_dragStartCell || _dragConsumed) return;
+    const cell = _cellFromPoint(e.clientX, e.clientY);
+    if (!cell || (cell.r === _dragStartCell.r && cell.c === _dragStartCell.c)) return;
+    const isNeighbor =
+      (Math.abs(cell.r - _dragStartCell.r) === 1 && cell.c === _dragStartCell.c) ||
+      (Math.abs(cell.c - _dragStartCell.c) === 1 && cell.r === _dragStartCell.r);
+    if (!isNeighbor) return; // komşu değil — belki oraya doğru sürüklüyordur, bekle
+    _dragConsumed = true;
+    handleCellClick(cell.r, cell.c); // 2. hücre — gerçek hamle denemesi (popup dahil)
+  });
+
+  function _endDrag() { _dragStartCell = null; _dragConsumed = false; }
+  container.addEventListener("pointerup", _endDrag);
+  container.addEventListener("pointercancel", _endDrag);
+  container.addEventListener("pointerleave", _endDrag);
+
   _boardListenerEl = container;
 }
 

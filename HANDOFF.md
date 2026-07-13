@@ -31,7 +31,7 @@ ağacına dönüştürüldü.
 | `rules/` (8 dosya: sabitler) | %95 | Sağlam |
 | `features/` (blockers/wave/hint/dda/hourglass/league) | %90 | Sağlam |
 | `economy/` (energy-shop, EnergyTracker) | %85 | Sağlam |
-| `ui/` (screens.js, renderer.js) | %95 | Render fonksiyonları ayrıldı |
+| `ui/` (screens.js, renderer.js) | %95 | Render fonksiyonları ayrıldı. **Oturum 65:** tahta etkileşimi tıkla-tıkla'dan sürükle-bırak'a geçti (Pointer Events API, mouse+dokunma+kalem tek kod yolu) — eski tıkla-tıkla hâlâ ÇALIŞIYOR (hareketsiz dokunma = eski davranış), `flow/moveFlow.js`'e dokunulmadı, sadece `handleCellClick()` doğru sırada 2 kez çağrılıyor. Sürüklerken sayfa kaymasın diye `.f9-board-container`'a `touch-action:none` eklendi. |
 | `content/` (worlds/levels/rewards/blockers) | %95 | Duality çözüldü + name/theme dublikasyonu giderildi (Oturum 25) |
 | `save/` | %85 | Sağlam |
 | `debug/` + `debug/benchmark/` | %90 | F9Bot + headless test altyapısı sağlam |
@@ -207,6 +207,22 @@ matrix 0.079. Geçilemez (%0) level sayısı: 1 (level 69) — bkz.
 README.md Oturum 29 için tam kıyas tablosu ve gerekçe.
 
 ## Bulunmuş ve düzeltilmiş büyük hatalar (tekrar yapma)
+
+- **🔴 KRİTİK (Oturum 65) — İpucu sistemi (F9Hint) muhtemelen HİÇ
+  ÇALIŞMAMIŞTI, hiç fark edilmeden.** `features/hint/hint-system.js`
+  `window.state?.gc` kullanıyordu — ama `state` (core/game-engine.js)
+  paylaşımlı IIFE kapsamında `const` olarak tanımlı, üst-seviye
+  `const`'lar `window`'a ASLA otomatik eklenmez (sadece `var`/fonksiyon
+  bildirimleri eklenir). Yani `gc` HER ZAMAN `undefined`'dı,
+  `_findBestHint(undefined)` sessizce `null` dönüyordu — parıldama efekti
+  hiç tetiklenmiyordu. `debug/bot.js`'in doğru kullandığı çıplak
+  `state.gc` ile karşılaştırılınca fark edildi (Oturum 65'te sürükle-
+  bırak özelliğini test ederken tesadüfen bulundu). Aynı hata
+  `debug/analytics.js`'te de vardı (4 yerde) — o da düzeltildi. **Ders:**
+  paylaşımlı IIFE'de üst-seviye `const`/`let` değişkenlere HER ZAMAN
+  çıplak isimle eriş, `window.` öneki ekleme — sadece gerçekten
+  `window`'a atanmış şeyler (`window.state=...` gibi açık bir satır
+  varsa) `window.` ile erişilebilir.
 
 - **🔴 KRİTİK (Oturum 29) — Elmas+9 ("Matrix Eşleşme") hâlâ TÜM
   TAHTAYI patlatıyordu (64 hücre), kullanıcının "8 hücre haç, tüm

@@ -15,19 +15,22 @@ const F9Report = (() => {
   }
 
   // Oyun state özeti — hassas veri içermez
+  // [Oturum 65 — aynı hata düzeltmesi, bkz. features/hint/hint-system.js]
+  // `window.state` her zaman undefined'dı — `state` paylaşımlı kapsamda
+  // `const`, window'a otomatik eklenmiyor.
   function _gameSnapshot() {
     try {
-      const gc = window.state?.gc;
+      const gc = state?.gc;
       return {
-        screen: window.state?.screen,
-        level: window.state?.levelNumber,
+        screen: state?.screen,
+        level: state?.levelNumber,
         score: gc?.score,
         moves: gc?.movesUsed + "/" + gc?.movesLimit,
         status: gc?.status,
         gifts: gc?.gifts?.size,
         blockers: gc?.blockers?.size,
         hourglasses: gc?.hourglasses?.size,
-        energy: window.state?.energyTracker?.energy,
+        energy: state?.energyTracker?.energy,
         build: document.title,
         ua: navigator.userAgent.slice(0, 80),
       };

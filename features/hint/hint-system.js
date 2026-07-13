@@ -13,7 +13,7 @@ const F9Hint = (() => {
   // (varsa) ve hedefi ne — core/game-engine.js'teki TUTORIAL_CURRICULUM
   // tablosundan okunuyor. Bölüm 11+ için null (normal greedy ipucu).
   function _currentTutorialFocus() {
-    const lvl = window.state?.levelNumber;
+    const lvl = state?.levelNumber;
     if (!lvl) return null;
     const chapter = Math.ceil(lvl / 10) || 1;
     return TUTORIAL_CURRICULUM[chapter] || null;
@@ -119,7 +119,15 @@ const F9Hint = (() => {
 
   function _showHint() {
     if (!_active) return;
-    const gc = window.state?.gc;
+    // [Oturum 65 — KRİTİK HATA DÜZELTMESİ] `window.state` HER ZAMAN
+    // undefined'dı — `state` core/game-engine.js'te `const` olarak
+    // tanımlı, üst-seviye `const`'lar `window`'a ASLA otomatik eklenmez
+    // (sadece `var`/fonksiyon bildirimleri eklenir). Yani bu satır
+    // `gc`'yi HER ZAMAN undefined yapıyordu, `_findBestHint(undefined)`
+    // her seferinde sessizce null dönüyordu — İPUCU SİSTEMİ (parıldama)
+    // muhtemelen HİÇ ÇALIŞMAMIŞTI (debug/bot.js'in doğru kullandığı
+    // çıplak `state.gc` ile karşılaştırınca fark edildi).
+    const gc = state?.gc;
     const hint = _findBestHint(gc);
     if (!hint) return;
     _clearGlow();
