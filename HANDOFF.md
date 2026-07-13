@@ -423,6 +423,19 @@ hem headless bundle bunu kullanır, elle iki yerde tutmuyoruz artık).
    `strategic-shape-bot.js all` → 36/36 gerçek swap hamleleriyle
    başarıyla inşa edildi.
 
+   **⚠️ ÖNEMLİ — kullanıcının ana referans listesiyle KASITLI ayrım:**
+   Kullanıcının elindeki tam 48-model listesi (3'lü×10, 4'lü×16, 5'li×14,
+   6'lı×4, 7'li×4) TEK TEK koddaki her şekille karşılaştırıldı — 47/48
+   birebir örtüşüyor. **Tek istisna `b4_07`:** kullanıcının ana
+   listesinde HÂLÂ eski/hatalı haliyle duruyor (`(0,0)(0,1)(1,1)(2,1)
+   -> (0,1)`, yani `b4_05` ile aynı hücreler). Kullanıcıya soruldu,
+   açıkça onayladı: **"mevcut düzeltmeyi (b4_06'nın aynası) koru, ana
+   liste zaten hatalıymış."** Yani koddaki `b4_07` BİLEREK ana referans
+   listesinden farklı — bu bir hata DEĞİL, kullanıcı kararı. Ana liste
+   güncellenmedi (kullanıcının elinde, bu repo'nun dışında). Gelecekte
+   biri ana listeyle kodu karşılaştırıp "tutmuyor" derse, bu not
+   geçerli açıklamadır — kodu geri "düzeltmeye" kalkma.
+
 ## Dosya haritası (hızlı referans)
 
 ```
