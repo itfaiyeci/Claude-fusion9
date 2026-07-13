@@ -1,0 +1,15 @@
+{
+  "level": 50,
+  "moves": 16,
+  "targetScore": 342,
+  "pattern": "fibonacci",
+  "density": 0.57,
+  "tierName": "pro",
+  "isBreathe": true,
+  "milestone": {
+    "type": "yeni_mekanik",
+    "msg": "Kum Saati Aktif Oldu!",
+    "icon": "⏳"
+  },
+  "blockerCells": 7
+}

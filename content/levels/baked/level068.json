@@ -1,0 +1,11 @@
+{
+  "level": 68,
+  "moves": 16,
+  "targetScore": 747,
+  "pattern": "fibonacci",
+  "density": 0.42,
+  "tierName": "zor",
+  "isBreathe": false,
+  "milestone": null,
+  "blockerCells": 6
+}

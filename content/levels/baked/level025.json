@@ -1,0 +1,15 @@
+{
+  "level": 25,
+  "moves": 16,
+  "targetScore": 415,
+  "pattern": "pyramid",
+  "density": 0.54,
+  "tierName": "pro",
+  "isBreathe": true,
+  "milestone": {
+    "type": "yeni_engel",
+    "msg": "Buz Engeli Sahneye Çıktı!",
+    "icon": "🧊"
+  },
+  "blockerCells": 9
+}

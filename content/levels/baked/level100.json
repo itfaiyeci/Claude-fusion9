@@ -1,0 +1,15 @@
+{
+  "level": 100,
+  "moves": 16,
+  "targetScore": 364,
+  "pattern": "prime",
+  "density": 0.6,
+  "tierName": "pro",
+  "isBreathe": true,
+  "milestone": {
+    "type": "yeni_engel",
+    "msg": "Çelik Engel Kilidi Açıldı!",
+    "icon": "🔒"
+  },
+  "blockerCells": 10
+}

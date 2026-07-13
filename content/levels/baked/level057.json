@@ -1,0 +1,11 @@
+{
+  "level": 57,
+  "moves": 16,
+  "targetScore": 654,
+  "pattern": "fibonacci",
+  "density": 0.18,
+  "tierName": "orta",
+  "isBreathe": false,
+  "milestone": null,
+  "blockerCells": 3
+}

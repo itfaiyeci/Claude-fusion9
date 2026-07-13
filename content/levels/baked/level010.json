@@ -1,0 +1,15 @@
+{
+  "level": 10,
+  "moves": 16,
+  "targetScore": 290,
+  "pattern": "pyramid",
+  "density": 0.51,
+  "tierName": "pro",
+  "isBreathe": true,
+  "milestone": {
+    "type": "yeni_mekanik",
+    "msg": "Bakır Hediye Taşı Kilidi Açıldı!",
+    "icon": "🥉"
+  },
+  "blockerCells": 9
+}

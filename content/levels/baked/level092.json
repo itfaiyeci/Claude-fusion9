@@ -1,0 +1,11 @@
+{
+  "level": 92,
+  "moves": 16,
+  "targetScore": 682,
+  "pattern": "prime",
+  "density": 0.19,
+  "tierName": "orta",
+  "isBreathe": false,
+  "milestone": null,
+  "blockerCells": 3
+}

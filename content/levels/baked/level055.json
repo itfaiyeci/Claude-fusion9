@@ -1,0 +1,11 @@
+{
+  "level": 55,
+  "moves": 16,
+  "targetScore": 448,
+  "pattern": "fibonacci",
+  "density": 0.57,
+  "tierName": "pro",
+  "isBreathe": true,
+  "milestone": null,
+  "blockerCells": 7
+}

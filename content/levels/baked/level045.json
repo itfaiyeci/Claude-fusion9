@@ -1,0 +1,11 @@
+{
+  "level": 45,
+  "moves": 16,
+  "targetScore": 660,
+  "pattern": "fibonacci",
+  "density": 0.56,
+  "tierName": "boss",
+  "isBreathe": true,
+  "milestone": null,
+  "blockerCells": 5
+}

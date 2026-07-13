@@ -1,0 +1,11 @@
+{
+  "level": 85,
+  "moves": 16,
+  "targetScore": 466,
+  "pattern": "prime",
+  "density": 0.59,
+  "tierName": "pro",
+  "isBreathe": true,
+  "milestone": null,
+  "blockerCells": 9
+}

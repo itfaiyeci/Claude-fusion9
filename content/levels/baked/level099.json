@@ -1,0 +1,11 @@
+{
+  "level": 99,
+  "moves": 16,
+  "targetScore": 1071,
+  "pattern": "prime",
+  "density": 0.68,
+  "tierName": "zor",
+  "isBreathe": false,
+  "milestone": null,
+  "blockerCells": 14
+}

@@ -1,0 +1,20 @@
+{
+  "params": {
+    "N_GAMES": 10000,
+    "MIN_LEVEL": 1,
+    "MAX_LEVEL": 100,
+    "PROFILE": "pro"
+  },
+  "winRate": 0.3786,
+  "avgScore": 561.108,
+  "avgScoreRatio": 1.062575390646256,
+  "avgMoves": 16.664,
+  "tierTotals": {
+    "bakir": 13433,
+    "bronz": 7365,
+    "gumus": 5342,
+    "altin": 3292,
+    "elmas": 1783
+  },
+  "matrixTotal": 664
+}

@@ -1,0 +1,11 @@
+{
+  "level": 30,
+  "moves": 16,
+  "targetScore": 488,
+  "pattern": "pyramid",
+  "density": 0.55,
+  "tierName": "boss",
+  "isBreathe": true,
+  "milestone": null,
+  "blockerCells": 16
+}
