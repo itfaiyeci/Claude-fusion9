@@ -13,13 +13,14 @@ toplam/fark/çarpım/bölümünün basamak-kökü 9 olmasını sağlıyorsun).
 Eşleşme) üretiyor. Tek bir ~1MB'lık HTML dosyasıydı, modüler bir kaynak
 ağacına dönüştürüldü.
 
-## ⚠️ ÜRETİME ÇIKMADAN ÖNCE KONTROL ET
+## ✅ Üretim bayrağı DÜZELTİLDİ (Oturum 60)
 
-- **`core/game-engine.js`'teki `HOURLY_REWARD_TEST_MODE = true`** →
-  `false` yap. Şu an "saat başı ödül" (tüp/can yenileme) test için
-  5 dakikada bir veriliyor — gerçek üretim değeri 1 saat
-  (`HOURLY_REWARD_REAL_SEC=3600`), bayrağı çevirmek yeterli (Oturum 27,
-  kullanıcı kararı — bkz. "En kritik kararlar" madde 11).
+- **`core/game-engine.js`'teki `HOURLY_REWARD_TEST_MODE`** artık `false`
+  (üretim değeri: `HOURLY_REWARD_REAL_SEC=3600`, 1 saat). Kullanıcı
+  GitHub web arayüzünden elle düzeltmeye çalışırken `False` (Python
+  tarzı, büyük harf) yazmıştı — bu geçerli JS değil, runtime hatası
+  verirdi ("False is not defined"). Bu oturumda `false` (küçük harf)
+  olarak düzeltildi ve `node build/build.js` ile doğrulandı.
 
 ## Mimari durumu (özet tablo)
 
