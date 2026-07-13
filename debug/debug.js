@@ -55,6 +55,21 @@ const F9Debug = (() => {
   }
 
   function _push(cat, msg, data) {
+    // [Oturum 63 — kullanıcı isteği: "cihazları yormaması gerekir",
+    // performans denetimi] KRİTİK DÜZELTME: bu fonksiyon önceden
+    // ENABLED=false olsa BİLE (yani gerçek oyuncularda debug KAPALIYKEN
+    // bile) her çağrıda JSON.stringify(data) + array push/pop + DOM
+    // panel güncellemesi yapıyordu. Kod tabanında 36 çağrı noktası var,
+    // çoğu "move"/"score"/"game" gibi SIK (her hamlede) tetiklenen
+    // kategoriler — yani her oyuncunun her hareketinde gereksiz iş.
+    // Artık: "error"/"warn" NADİR olduğu için (performans derdi değil)
+    // HER ZAMAN tam işleniyor — rozet (🐛 ikonundaki kırmızı sayaç)
+    // ENABLED=false olan gerçek kullanıcılarda bile güncel kalsın diye.
+    // Ama sık tekrarlanan normal kategoriler (move/score/game/vb.)
+    // ENABLED=false iken fonksiyonun EN BAŞINDA çıkıyor — hiç
+    // JSON.stringify, hiç array push, hiç DOM işi yok.
+    if (cat !== "error" && cat !== "warn" && !ENABLED) return;
+
     const entry = { ts: _ts(), cat, msg, data: data !== undefined ? data : null };
     logs.unshift(entry);
     if (logs.length > MAX_LOGS) logs.pop();
