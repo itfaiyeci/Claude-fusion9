@@ -328,7 +328,7 @@ if (arg === "chain") {
   console.log(JSON.stringify(r, null, 2));
   process.exit(r.success ? 0 : 1);
 } else if (arg === "all") {
-  console.log("Stratejik şekil inşa botu — 36 sabit şekil (3-7'li bloklar) test ediliyor...\n");
+  console.log("Stratejik şekil inşa botu — 34 sabit şekil (3-7'li bloklar) test ediliyor... [Oturum 60: b4_05/b4_07 birleşti, artık line-tarzı b4_dual olarak ayrı test ediliyor, ALL_FIXED_SHAPES'te değil — bkz. shape-lab]\n");
   const results = runAll();
   const success = results.filter(r=>r.success);
   const failed = results.filter(r=>!r.success);

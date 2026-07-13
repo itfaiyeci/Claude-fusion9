@@ -95,6 +95,7 @@ const lineShapeNames = [
   { name: "line3_h", group: "a" }, { name: "line3_v", group: "a" },
   { name: "line4_h", group: "b" }, { name: "line4_v", group: "b" },
   { name: "line5_h", group: "c" }, { name: "line5_v", group: "c" },
+  { name: "b4_dual", group: "b" }, // [Oturum 60] b4_05/b4_07 birleşimi — aynı sebeple ALL_FIXED_SHAPES'te değil
 ];
 const knownShapes = [...allShapeNames, ...lineShapeNames];
 

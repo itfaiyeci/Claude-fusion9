@@ -34,15 +34,30 @@ const BLOCK_4_SHAPES=[
   Sh("b4_02",GROUP_B,[[0,1],[1,1],[2,1],[1,0]],[1,1]),
   Sh("b4_03",GROUP_B,[[0,0],[0,1],[0,2],[1,1]],[0,1]),
   Sh("b4_04",GROUP_B,[[1,0],[1,1],[1,2],[0,1]],[1,1]),
-  Sh("b4_05",GROUP_B,[[0,0],[0,1],[1,1],[2,1]],[2,1]),
   Sh("b4_06",GROUP_B,[[0,0],[1,0],[2,0],[2,1]],[2,0]),
-  Sh("b4_07",GROUP_B,[[0,0],[0,1],[1,1],[2,1]],[0,1]),
   Sh("b4_08",GROUP_B,[[0,0],[1,0],[2,0],[0,1]],[0,0]),
   Sh("b4_09",GROUP_B,[[0,0],[0,1],[0,2],[1,0]],[0,0]),
   Sh("b4_10",GROUP_B,[[0,0],[0,1],[0,2],[1,2]],[0,2]),
   Sh("b4_11",GROUP_B,[[1,0],[1,1],[1,2],[0,0]],[1,0]),
   Sh("b4_12",GROUP_B,[[1,0],[1,1],[1,2],[0,2]],[1,2]),
 ];
+
+// [Oturum 60 — b4_05/b4_07 KARARI ÇÖZÜLDÜ] Bu ikisi AYNI 4 hücreyi
+// ([[0,0],[0,1],[1,1],[2,1]]) paylaşıyordu, sadece spawn noktası
+// farklıydı — statik ALL_FIXED_SHAPES listesinde iki AYRI şekil olarak
+// durunca biri (b4_07) yapısal olarak asla tetiklenemiyordu (aynı
+// LINE_4'te olduğu gibi zaten var olan "tek şekil + birden fazla
+// spawn adayı" deseni burada YANLIŞ uygulanmıştı). Kullanıcı orijinal
+// listesinde LINE_4 için de aynı iki-spawn deseni olduğunu gösterince
+// (satır 1-4) çözüm netleşti: LINE_4_SPAWN_OFFSETS ile AYNI mekanizmayı
+// (engine/matchEngine.js findLineMatches — son hamlenin pozisyonuna
+// göre spawn seçimi, yoksa varsayılana düşme) buraya da uygula. Artık
+// TEK şekil (b4_dual), iki spawn adayı — ikisi de gerçekten
+// tetiklenebilir. b4_09/index karışıklığı olmasın diye offsets index
+// cinsinden: 3=(2,1) [eski b4_05'in spawn'ı, varsayılan/fallback],
+// 1=(0,1) [eski b4_07'nin spawn'ı].
+const B4_DUAL_TEMPLATE=[[0,0],[0,1],[1,1],[2,1]];
+const B4_DUAL_SPAWN_OFFSETS=[3,1];
 
 // 5'li bloklar — Oturum 30: eski CORNER_5_SHAPES(4)+U_SHAPES(4)+
 // T_SHAPES(4)=12 şeklin yerine kullanıcının verdiği 12 blok geçti

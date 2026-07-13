@@ -1,2 +1,5 @@
 node_modules/
 *.log
+debug/benchmark/results/
+debug/benchmark/.headless-bundle.js
+debug/shape-lab.html

@@ -51,6 +51,8 @@ function findAllMatches(board,lastMovePos){
   matches.push(...findLineMatches(board,LINE_4_V,GROUP_B,"line4_v",LINE_4_SPAWN_OFFSETS,lastMovePos));
   matches.push(...findLineMatches(board,LINE_5_H,GROUP_C,"line5_h",[LINE_5_SPAWN_OFFSET],lastMovePos));
   matches.push(...findLineMatches(board,LINE_5_V,GROUP_C,"line5_v",[LINE_5_SPAWN_OFFSET],lastMovePos));
+  // [Oturum 60] b4_05/b4_07 çözümü — bkz. rules/matchRules.js'teki not.
+  matches.push(...findLineMatches(board,B4_DUAL_TEMPLATE,GROUP_B,"b4_dual",B4_DUAL_SPAWN_OFFSETS,lastMovePos));
   return matches;
 }
 

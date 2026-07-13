@@ -137,7 +137,7 @@ ${engineScript}
 
 
   // ============================================================
-  // 48 MODEL LİSTESİ: 36 sabit şekil (ALL_FIXED_SHAPES) + 12 çizgi
+  // 48 MODEL LİSTESİ: 34 sabit şekil (ALL_FIXED_SHAPES) + 14 çizgi
   // varyasyonu (LINE_3/4/5_H/V × spawn ofsetleri) — kullanıcının
   // saydığı 10+16+14+4+4=48 ile BİREBİR.
   // ============================================================
@@ -151,6 +151,10 @@ ${engineScript}
   for (const off of [1,2])   LINE_MODELS.push({ name:'line4_v_'+off, baseName:'line4_v', group:'b', cells:L4V, spawn:L4V[off] });
   LINE_MODELS.push({ name:'line5_h_2', baseName:'line5_h', group:'c', cells:L5H, spawn:L5H[2] });
   LINE_MODELS.push({ name:'line5_v_2', baseName:'line5_v', group:'c', cells:L5V, spawn:L5V[2] });
+  // [Oturum 60] b4_05/b4_07 birleşti — artık ALL_FIXED_SHAPES'te değil,
+  // line4_h/v ile AYNI desende (tek şekil, iki spawn adayı) burada.
+  const B4DUAL=[[0,0],[0,1],[1,1],[2,1]];
+  for (const off of [3,1]) LINE_MODELS.push({ name:'b4_dual_'+off, baseName:'b4_dual', group:'b', cells:B4DUAL, spawn:B4DUAL[off] });
 
   const ALL_MODELS = [...ALL_FIXED_SHAPES, ...LINE_MODELS];
   // beklenen: 36 + 12 = 48
@@ -849,6 +853,6 @@ ${engineScript}
 
 fs.writeFileSync(OUT, html, "utf-8");
 console.log("✓ Şekil Kontrol Paneli oluşturuldu:", OUT);
-console.log("  Toplam model: 48 (36 sabit şekil + 12 çizgi varyasyonu)");
+console.log("  Toplam model: 48 (34 sabit şekil + 14 çizgi varyasyonu — Oturum 60: b4_05/b4_07 birleşti)");
 console.log("  İleri/geri adım navigasyonu + otomatik oynatma eklendi.");
 console.log("  Tarayıcıda doğrudan açılabilir (sunucu gerekmez).");

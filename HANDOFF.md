@@ -403,10 +403,22 @@ hem headless bundle bunu kullanır, elle iki yerde tutmuyoruz artık).
    strategic-shape-bot.js`) 35/36 sabit şekli VE tam terfi zincirini
    GERÇEK swap hamleleriyle başarıyla inşa etti — hepsi teorik olarak
    ERİŞİLEBİLİR, sadece greedy/rastgele oynayışta doğal olarak nadir.
-3. **YENİ (Oturum 32) — `b4_05`/`b4_07` aynı 4 hücreyi paylaşıyor,
-   `b4_07` yapısal olarak asla tetiklenemez.** Karar bekliyor: (a)
-   olduğu gibi bırak, (b) `b4_07`'yi kaldır, (c) spawn seçim kuralı
-   ekle. Bkz. README.md Oturum 32.
+3. **~~YENİ (Oturum 32) — `b4_05`/`b4_07` aynı 4 hücreyi paylaşıyor,
+   `b4_07` yapısal olarak asla tetiklenemez.~~ → ÇÖZÜLDÜ (Oturum 60),
+   seçenek (c).** Kullanıcının orijinal listesinde `LINE_4` için de
+   aynı "aynı hücreler, iki spawn" deseni olduğu görülünce (zaten
+   `LINE_4_SPAWN_OFFSETS` + `findLineMatches()`'te ÇALIŞAN bir mekanizma
+   olarak var), aynı mekanizma buraya da uygulandı: `b4_05`+`b4_07`
+   tek şekle (`b4_dual`, `rules/matchRules.js`) birleşti, spawn artık
+   son hamlenin pozisyonuna göre seçiliyor (yoksa varsayılana düşüyor).
+   `engine/matchEngine.js findAllMatches()`'e tek satır eklendi.
+   `debug/benchmark/shape-coverage-report.js`, `strategic-shape-bot.js`
+   (34 sabit şekil, `b4_dual` artık line-tarzı ayrı test ediliyor —
+   ALL_FIXED_SHAPES'te değil, mevcut line3/4/5 emsaliyle tutarlı) ve
+   `debug/build-shape-lab.js` (48 model sayısı KORUNDU: 34+14) buna göre
+   güncellendi. Doğrulama: `strategic-shape-bot.js all` → 34/34 başarılı;
+   izole testte her iki spawn ucunun (eski b4_05 VE eski b4_07 pozisyonu)
+   gerçekten farklı `lastMovePos` senaryolarında tetiklendiği kanıtlandı.
 
 ## Dosya haritası (hızlı referans)
 
