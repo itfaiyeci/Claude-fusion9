@@ -20,23 +20,24 @@ const F9Hint = (() => {
   }
 
   // [DÜZELTME] Bir hamleyi (gerçekten UYGULAMADAN) simüle edip, sonucunda
-  // hangi eşleşme GRUPLARININ oluşacağını döndürür. DİKKAT: bu oyun
-  // standart "iki hücrenin yerini değiştir" değil — GameCore.applyPlayerMove()
-  // "normal" hamlede (r2,c2) hücresine val1/val2'nin ARİTMETİK SONUCUNU
-  // (GameCore.validOps'tan seçilen op) yazıyor, (r1,c1) ise TAMAMEN YENİ
-  // rastgele bir değer alıyor (bkz. core/GameCore.js applyPlayerMove,
-  // "else" dalı). Birden fazla olası op (+,-,*,/) olabilir — oyuncu menüden
-  // seçer; ipucu için HERHANGİ BİRİ hedef grubu üretiyorsa yeterli sayıyoruz.
+  // hangi eşleşme GRUPLARININ ve HANGİ HÜCRELERİN oluşacağını döndürür.
+  // DİKKAT: bu oyun standart "iki hücrenin yerini değiştir" değil —
+  // GameCore.applyPlayerMove() "normal" hamlede (r2,c2) hücresine
+  // val1/val2'nin ARİTMETİK SONUCUNU (GameCore.validOps'tan seçilen op)
+  // yazıyor, (r1,c1) ise TAMAMEN YENİ rastgele bir değer alıyor (bkz.
+  // core/GameCore.js applyPlayerMove, "else" dalı). Birden fazla olası
+  // op (+,-,*,/) olabilir — oyuncu menüden seçer; ipucu için HERHANGİ
+  // BİRİ hedef grubu üretiyorsa yeterli sayıyoruz.
   function _simulateNormalMoveGroups(gc, r1, c1, r2, c2, ops) {
-    const groups = new Set();
+    const results = []; // { group, cells }
     for (const op of ops) {
       const cellsCopy = gc.board.cells.map(row => row.slice());
       cellsCopy[r2][c2] = op.value; // (r1,c1) bilinçli olarak DOKUNULMADI — gerçek değeri rastgele olacak, tahmin edilemez, mevcut değeri en yakın yaklaşım
       const fakeBoard = { getCell: (r, c) => (r < 0 || c < 0 || r >= GRID || c >= GRID) ? null : cellsCopy[r][c] };
       const matches = findAllMatches(fakeBoard, { r: r2, c: c2 });
-      matches.forEach(m => groups.add(m.group));
+      matches.forEach(m => results.push({ group: m.group, cells: m.cells }));
     }
-    return [...groups];
+    return results;
   }
 
   // En iyi hamleyi bul — F9Bot'un greedy seçicisi gibi, ama bir
@@ -55,10 +56,16 @@ const F9Hint = (() => {
           if (!opts||opts.kind==="blocked"||opts.kind==="invalid") continue;
 
           // [Oturum 64] Müfredat hedefi kontrolü — normal skordan ÖNCE.
-          let isFocusMove = false;
+          // [Oturum 89 — kullanıcı isteği: "9 yapacak hamle değil, şekli
+          // tamamlayan (9 DIŞI) diğer hücreler vurgulanmalı"] Artık
+          // sadece swap edilecek 2 hücre değil, şeklin TAMAMI (tahtada
+          // zaten duran diğer 9'lar dahil) `shapeCells` olarak saklanıyor.
+          let isFocusMove = false, shapeCells = null;
           if (focus && focus.kind === "create" && opts.kind === "normal") {
-            const groups = _simulateNormalMoveGroups(gc, r, c, r2, c2, opts.ops || []);
-            isFocusMove = groups.includes(focus.group);
+            const results = _simulateNormalMoveGroups(gc, r, c, r2, c2, opts.ops || []);
+            const match = results.find(m => m.group === focus.group);
+            isFocusMove = !!match;
+            if (match) shapeCells = match.cells;
           } else if (focus && focus.kind === "promote" && opts.kind === "promotion") {
             const g1 = gc.gifts.get(cellKey(r,c)), g2 = gc.gifts.get(cellKey(r2,c2));
             const giftHere = (g1 && g1.giftType) || (g2 && g2.giftType) || null;
@@ -67,7 +74,7 @@ const F9Hint = (() => {
           if (isFocusMove) {
             if (!bestIsFocus) { bestIsFocus = true; bestScore = -Infinity; } // ilk odak hamlesi bulununca normal adaylar elenir
             const score = 5000; // odak hamlesi her zaman kazanır
-            if (score > bestScore) { bestScore=score; best={r1:r,c1:c,r2,c2,isFocus:true}; }
+            if (score > bestScore) { bestScore=score; best={r1:r,c1:c,r2,c2,isFocus:true,shapeCells}; }
             continue;
           }
           if (bestIsFocus) continue; // zaten bir odak hamlesi bulunduysa normal hamlelerle uğraşma
@@ -132,8 +139,18 @@ const F9Hint = (() => {
     if (!hint) return;
     _clearGlow();
     const color = hint.isFocus ? GLOW_COLOR_FOCUS : GLOW_COLOR;
-    _glow(hint.r1, hint.c1, color);
-    _glow(hint.r2, hint.c2, color);
+    // [Oturum 89 — kullanıcı isteği: "9 yapacak hamle değil, şekli
+    // tamamlayan DİĞER hücreler vurgulanmalı"] shapeCells varsa (odak
+    // hamlesi bir şekli tamamlıyorsa), TÜM şekli parlatıyoruz — sadece
+    // swap edilecek 2 hücreyi değil, tahtada zaten duran diğer 9'ları
+    // da. Oyuncu böylece "şu 2 hücreyi değiştir" değil, "işte tamamlanan
+    // şekil bu" görüyor.
+    if (hint.shapeCells && hint.shapeCells.length) {
+      hint.shapeCells.forEach(([r, c]) => _glow(r, c, color));
+    } else {
+      _glow(hint.r1, hint.c1, color);
+      _glow(hint.r2, hint.c2, color);
+    }
     F9Debug.log("game", `[İPUCU${hint.isFocus?"/MÜFREDAT":""}] (${hint.r1},${hint.c1})↔(${hint.r2},${hint.c2}) gösterildi`);
   }
 
