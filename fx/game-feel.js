@@ -197,7 +197,9 @@ const F9GameFeel = (() => {
 
   function celebrateMerge(r, c) {
     if (r == null || c == null) return;
-    // [Oturum 71] 4x4 grid parçacık patlaması.
+    // [Oturum 71] 4x4 grid parçacık patlaması. Bu, board container'ın
+    // KENDİSİNE (canvas) bağlı, hücrelere değil — render() tarafından
+    // silinmiyor, hemen çalıştırılabilir.
     if (typeof F9Particles !== "undefined") {
       const pos = F9Particles.cellCenter(r, c);
       if (pos) {
@@ -206,27 +208,46 @@ const F9GameFeel = (() => {
         });
       }
     }
-    // [Oturum 75] Merkez hücrede ayna yansıması dalgası + arkaplan geçişi.
-    const el = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
-    _cellReflectionWave(el);
-    if (el) {
+    // [Oturum 73] Dalgalanma halkası — document.body'ye eklenen SABİT
+    // bir eleman (fx/blast-fx.js _shockwave), hücrelere BAĞLI DEĞİL —
+    // render() tarafından silinmiyor, hemen çalıştırılabilir.
+    if (typeof F9Anim !== "undefined" && typeof F9Anim.shockwave === "function") {
+      F9Anim.shockwave(r, c, "#FFFFFF66");
+    }
+    // [Oturum 77 — KRİTİK HATA DÜZELTMESİ, kullanıcı ekran görüntüsüyle
+    // kanıtladı: "dalgalanma bu kadar" (hücre renkleri hiç görünmüyor)]
+    // KÖK NEDEN: "PlainMerge" event'i yayınlandıktan HEMEN SONRA, AYNI
+    // senkron JS turunda flow/rewardFlow.js executeMove() içinde
+    // render()/renderBoardOnly() çağrılıyor — bu, TÜM .f9-cell DOM
+    // elemanlarını YENİDEN OLUŞTURUYOR. Hücreleri BURADA (senkron
+    // olarak) boyamak, tarayıcı HİÇ BOYAMADAN (paint) önce o elemanlar
+    // render() tarafından silindiği için TAMAMEN GÖRÜNMEZ oluyordu —
+    // parçacık/dalgalanma (hücrelere bağlı olmayan, ayrı elemanlar)
+    // görünüyordu ama hücre renk değişimi hiç görünmüyordu. ÇÖZÜM: hücre
+    // boyamasını requestAnimationFrame ile SONRAKİ FRAME'E ertele —
+    // render() senkron olarak zaten bitmiş olacak, DOM'u O NOKTADA
+    // YENİDEN sorgula (eski `el` referansını SAKLAMA, o zaten kopmuş
+    // olabilir).
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+      if (!el) return;
+      _cellReflectionWave(el);
       el.animate?.([
         { transform: "scale(1)" },
         { transform: "scale(1.16)" },
         { transform: "scale(1)" },
       ], { duration: 220, easing: "ease-out" });
-    }
-    // [Oturum 73] Dalgalanma halkası (dekoratif, F9Anim'de zaten vardı).
-    if (typeof F9Anim !== "undefined" && typeof F9Anim.shockwave === "function") {
-      F9Anim.shockwave(r, c, "#FFFFFF66");
-    }
-    // [Oturum 74→75] Etraftaki hücreler de aynı yansıma dalgasını, merkeze
-    // olan mesafeye göre kademeli gecikmeyle alıyor — ışık dışarı yayılıyor.
-    _illuminateNeighbors(r, c);
+      // Etraftaki hücreler de aynı yansıma dalgasını, merkeze olan
+      // mesafeye göre kademeli gecikmeyle alıyor — ışık dışarı yayılıyor.
+      _illuminateNeighbors(r, c);
+    });
   }
 
   // Merkez hücrenin etrafındaki hücreleri, merkeze olan mesafeye göre
-  // KADEMELİ GECİKMEYLE aynı yansıma dalgasıyla aydınlatır.
+  // KADEMELİ GECİKMEYLE aynı yansıma dalgasıyla aydınlatır. DİKKAT: `el`
+  // referansları HER GECİKMEDE YENİDEN sorgulanıyor (setTimeout içinde,
+  // önceden değil) — render() bu sırada tekrar çalışırsa (nadiren) yine
+  // güncel DOM'u bulsun diye.
   function _illuminateNeighbors(r, c, radius = 2) {
     for (let dr = -radius; dr <= radius; dr++) {
       for (let dc = -radius; dc <= radius; dc++) {
@@ -234,10 +255,11 @@ const F9GameFeel = (() => {
         const dist = Math.hypot(dr, dc);
         if (dist > radius + 0.1) continue; // köşeleri ele, daire şeklinde yayılsın
         const nr = r + dr, nc = c + dc;
-        const el = document.querySelector(`[data-r="${nr}"][data-c="${nc}"]`);
-        if (!el) continue;
         const delay = Math.round(dist * 55); // ışık dışarı doğru yayılıyor gibi kademeli gecikme
-        setTimeout(() => _cellReflectionWave(el), delay);
+        setTimeout(() => {
+          const nel = document.querySelector(`[data-r="${nr}"][data-c="${nc}"]`);
+          if (nel) _cellReflectionWave(nel);
+        }, delay);
       }
     }
   }
