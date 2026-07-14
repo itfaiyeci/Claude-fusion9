@@ -472,7 +472,6 @@ function renderOptionsArea() {
       : `<span style="font-size:28px;font-weight:900;color:${color};line-height:1">${o.value}</span>`;
     return `<button class="f9-op-btn2${o.value===9?" f9-op-btn2-nine":""}" data-idx="${i}">
       <span class="f9-op-sym2">${o.op}</span>
-      <span class="f9-op-arr2">→</span>
       <span class="f9-op-res2">${resultHtml}</span>
     </button>`;
   }).join("");
