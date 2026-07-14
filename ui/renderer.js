@@ -211,10 +211,18 @@ function renderBoardOnly() {
         if (disp.value === null) {
           inner = "";
         } else {
+          // [Oturum 88 — kullanıcı isteği: "sayılara glow efekti ekle",
+          // her zaman hafifçe parlasın + %10 büyüsün] Kalıcı bir efekt
+          // — sadece birleştirme anında değil, HER ZAMAN aktif. Renk,
+          // sayının kendi rengiyle eşleşiyor (9 için altın). Boyut
+          // transform:scale(1.1) ile — img zaten %100xcell, hücrenin
+          // overflow:hidden'ı kenarlardaki taşmayı kırpıyor (kasıtlı,
+          // "pop" hissi veriyor, oyun içinde yaygın bir teknik).
+          const glowColor = disp.value === 9 ? "#E0B23C" : (NUMBER_COLOR[disp.value] || "#F2EBE0");
           const _nk = "num_" + disp.value;
           inner = GIFT_ASSETS[_nk]
-            ? `<img src="${GIFT_ASSETS[_nk]}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:4px;">`
-            : `<span style="color:${numColor};font-size:clamp(22px,7vw,42px);font-weight:900">${disp.value}</span>`;
+            ? `<img src="${GIFT_ASSETS[_nk]}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:4px;transform:scale(1.1);filter:drop-shadow(0 0 5px ${glowColor}) drop-shadow(0 0 10px ${glowColor}88);">`
+            : `<span style="color:${numColor};font-size:clamp(22px,7vw,42px);font-weight:900;display:inline-block;transform:scale(1.1);text-shadow:0 0 6px ${glowColor}, 0 0 12px ${glowColor}88;">${disp.value}</span>`;
         }
       } else if (disp.type === "hourglass") {
         cls += disp.warn ? " f9-cell-hourglass-warn" : " f9-cell-hourglass";
