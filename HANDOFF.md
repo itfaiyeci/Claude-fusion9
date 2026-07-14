@@ -225,6 +225,23 @@ README.md Oturum 29 için tam kıyas tablosu ve gerekçe.
 
 ## Bulunmuş ve düzeltilmiş büyük hatalar (tekrar yapma)
 
+- **🔴 KRİTİK (Oturum 77) — Hücre bazlı efektler `render()` tarafından
+  GÖRÜNMEDEN siliniyordu.** `flow/rewardFlow.js executeMove()` içinde bir
+  event (örn. "PlainMerge") yayınlandıktan HEMEN SONRA, AYNI senkron JS
+  turunda `render()`/`renderBoardOnly()` çağrılıyor — bu TÜM `.f9-cell`
+  DOM elemanlarını YENİDEN OLUŞTURUYOR. Bir event dinleyicisi (örn.
+  `fx/game-feel.js`) o hücreyi SENKRON olarak boyarsa, tarayıcı HİÇ
+  BOYAMADAN (paint) önce o eleman zaten silinmiş oluyor — efekt TEKNİK
+  OLARAK çalışıyor ama EKRANA HİÇ YANSIMIYOR. Board container'a/
+  document.body'ye bağlı ayrı elemanlar (particle canvas, shockwave
+  ring) bundan ETKİLENMİYOR (hücrelere bağlı değiller), sadece hücrenin
+  KENDİSİNE uygulanan stiller (background, box-shadow vb.) kayboluyor.
+  **KURAL: Bir event dinleyicisinde `.f9-cell` (veya render() ile
+  yeniden oluşturulan herhangi bir eleman) stillendirecekseniz, bunu
+  `requestAnimationFrame(() => { ... DOM'u YENİDEN sorgula ... })`
+  içine alın — render() senkron olduğu için o noktada kesinlikle
+  bitmiş olur, eski element referansını ASLA saklamayın.**
+
 - **🔴 KRİTİK (Oturum 65) — İpucu sistemi (F9Hint) muhtemelen HİÇ
   ÇALIŞMAMIŞTI, hiç fark edilmeden.** `features/hint/hint-system.js`
   `window.state?.gc` kullanıyordu — ama `state` (core/game-engine.js)
