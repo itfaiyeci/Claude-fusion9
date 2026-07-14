@@ -703,29 +703,33 @@ body { margin:0; background: #0B0D1A; /*base64-bg:/9j/4AAQSkZJRgABAQAAAQABAAD/2w
   will-change: background-color, box-shadow, transform; /* GPU katmanı — animasyon akıcılığı */
 }
 .f9-cell:hover { background: linear-gradient(145deg,#222848,#1A2038); }
-/* [Oturum 79 — kullanıcı isteği: "sayıları balon gibi gösterelim"]
-   CSS ile çizilen 3D balon — yeni görsel dosyası GEREKMİYOR. Işık
-   kaynağı üst-sol köşede (radial-gradient), koyu gölge alt-sağda,
-   ayrı bir parıltı lekesi (::before) ve alt uçta küçük bir düğüm
-   (::after, üçgen clip-path). Renk her sayı için değişken olarak
-   (--balloon-light/base/dark) satır içi stille geliyor. */
+/* [Oturum 80 — kullanıcı düzeltmesi: "balon benzetme idi, sayıları
+   balon gibi göstereceksin"] Klasik, hemen tanınan yuvarlak parti
+   balonu — tam daire (önceki teardrop/oval şekil yerine), tek büyük
+   parlak leke, altında ince bir ip + küçük düğüm. Renk her sayı için
+   değişken olarak (--balloon-light/base/dark) satır içi stille geliyor. */
 .f9-balloon {
   position: relative;
-  width: 76%; height: 84%; margin: 0 auto;
-  border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%;
-  background: radial-gradient(circle at 32% 26%, var(--balloon-light) 0%, var(--balloon-base) 55%, var(--balloon-dark) 100%);
-  box-shadow: inset -5px -7px 10px rgba(0,0,0,0.28), inset 3px 4px 6px rgba(255,255,255,0.15), 0 3px 6px rgba(0,0,0,0.35);
+  width: 72%; height: 72%; margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, var(--balloon-light) 0%, var(--balloon-base) 50%, var(--balloon-dark) 100%);
+  box-shadow: inset -6px -8px 12px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.4);
   display: flex; align-items: center; justify-content: center;
 }
 .f9-balloon::before {
-  content: ""; position: absolute; top: 13%; left: 18%;
-  width: 28%; height: 36%; border-radius: 50%;
-  background: rgba(255,255,255,0.55); filter: blur(1.2px);
-  transform: rotate(-25deg); pointer-events: none;
+  content: ""; position: absolute; top: 16%; left: 22%;
+  width: 24%; height: 32%; border-radius: 50%;
+  background: rgba(255,255,255,0.68); filter: blur(0.6px);
+  transform: rotate(-20deg); pointer-events: none;
 }
 .f9-balloon::after {
-  content: ""; position: absolute; bottom: 1%; left: 50%;
-  width: 11%; height: 9%; background: var(--balloon-dark);
+  content: ""; position: absolute; bottom: -20%; left: 50%;
+  width: 2px; height: 16%; background: rgba(255,255,255,0.3);
+  transform: translateX(-50%); pointer-events: none;
+}
+.f9-balloon-knot {
+  content: ""; position: absolute; bottom: -8%; left: 50%;
+  width: 10%; height: 8%; background: var(--balloon-dark);
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
   transform: translateX(-50%); pointer-events: none;
 }

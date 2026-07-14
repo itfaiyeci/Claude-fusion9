@@ -15,12 +15,12 @@ function _shadeHex(hex, percent) {
   return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, "0");
 }
 
-// Bir sayı için "balon" HTML'i — kendi renginde parlak, 3D bir balon
-// şekli (radial-gradient + parıltı lekesi + alt düğüm, hepsi CSS).
+// Bir sayı için "balon" HTML'i — klasik yuvarlak parti balonu
+// (parıltı + ip + düğüm, hepsi CSS/basit elemanlar).
 function _balloonHtml(value, baseColor) {
   const light = _shadeHex(baseColor, 32);
   const dark = _shadeHex(baseColor, -28);
-  return `<div class="f9-balloon" style="--balloon-light:${light};--balloon-base:${baseColor};--balloon-dark:${dark}"><span class="f9-balloon-number">${value}</span></div>`;
+  return `<div class="f9-balloon" style="--balloon-light:${light};--balloon-base:${baseColor};--balloon-dark:${dark}"><span class="f9-balloon-knot"></span><span class="f9-balloon-number">${value}</span></div>`;
 }
 
 // Sabit boyutlu bir kapta küçük balon ikonu — popup menüdeki sayı
