@@ -768,6 +768,31 @@ body { margin:0; background: #0B0D1A; /*base64-bg:/9j/4AAQSkZJRgABAQAAAQABAAD/2w
   80%  { transform: scale(0.95); }
   100% { transform: scale(1); }
 }
+/* [Oturum 68 — kullanıcı isteği: "sürükleyici, aksiyon", UI polish]
+   Kazanma ekranı kademeli açılış — yıldızlar tek tek "pat" diye
+   büyüyerek geliyor, istatistik kartları ve butonlar alttan kayarak
+   beliriyor. Skor sayacı ayrı bir JS animasyonuyla (bkz. ui/screens.js
+   _animateScoreCount) 0'dan gerçek değere sayıyor — CSS'te değil. */
+@keyframes f9-star-pop {
+  0%   { opacity:0; transform:scale(0) rotate(-20deg); }
+  60%  { opacity:1; transform:scale(1.3) rotate(8deg); }
+  100% { opacity:1; transform:scale(1) rotate(0deg); }
+}
+@keyframes f9-fade-up-in {
+  0%   { opacity:0; transform:translateY(14px); }
+  100% { opacity:1; transform:translateY(0); }
+}
+.f9-win-star { display:inline-block; opacity:0; animation:f9-star-pop 420ms cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.f9-win-stagger { opacity:0; animation:f9-fade-up-in 380ms ease-out forwards; }
+.f9-ripple {
+  position:absolute; border-radius:50%; background:rgba(255,255,255,0.35);
+  transform:scale(0); pointer-events:none; z-index:5;
+  animation:f9-ripple-anim 500ms ease-out forwards;
+}
+@keyframes f9-ripple-anim {
+  0%   { transform:scale(0);   opacity:0.55; }
+  100% { transform:scale(1);   opacity:0; }
+}
 @keyframes floatUp {
   0%   { opacity:1; transform: translateX(-50%) translateY(0); }
   100% { opacity:0; transform: translateX(-50%) translateY(-40px); }
@@ -1102,5 +1127,29 @@ if (_hasDaily) {
   state.screen = "menu";
 }
 render();
+
+// [Oturum 68 — kullanıcı isteği: "sürükleyici, aksiyon", UI polish]
+// Genel "ripple" (dokunma dalgası) efekti — TEK SEFERLİK global
+// dinleyici, document üzerinde. Herhangi bir <button> veya id'si
+// "btn-" ile başlayan/f9-*-btn sınıflı elemente dokununca, dokunulan
+// noktadan yayılan bir daire efekti oluşturur. Hiçbir buton HTML'ine
+// tek tek dokunmaya gerek yok — event delegation ile hepsini kapsıyor.
+(function _initRipple() {
+  document.addEventListener("pointerdown", (e) => {
+    const btn = e.target.closest('button, [id^="btn-"], [class*="-btn"]');
+    if (!btn || btn.disabled) return;
+    const rect = btn.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const size = Math.max(rect.width, rect.height) * 1.6;
+    const ripple = document.createElement("span");
+    ripple.className = "f9-ripple";
+    ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px;`;
+    const cs = getComputedStyle(btn);
+    if (cs.position === "static") btn.style.position = "relative";
+    if (cs.overflow !== "hidden") btn.style.overflow = "hidden";
+    btn.appendChild(ripple);
+    ripple.addEventListener("animationend", () => ripple.remove());
+  }, { passive: true });
+})();
 
 })();

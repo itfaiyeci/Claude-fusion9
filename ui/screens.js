@@ -325,17 +325,22 @@ function renderWin() {
   const _movesLeft = state.gc?.movesLimit - state.gc?.movesUsed || 0;
   const stars = _score >= _goal * 1.5 && _movesLeft >= 5 ? 3
               : _score >= _goal * 1.2 ? 2 : 1;
-  const starsHtml = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  // starsHtml kaldırıldı — [Oturum 68] yıldızlar artık tek tek kademeli
+  // açılıyor (bkz. aşağıdaki f9-win-star span'ları), statik string değil.
 
   root.innerHTML = `
     <div class="f9-wrap f9-screen-center">
       <div style="font-size:52px;animation:f9-bounce 0.6s cubic-bezier(0.34,1.56,0.64,1)">${_milestone ? _milestone.icon : '🎉'}</div>
-      <div style="font-size:24px;font-weight:900;color:#F2EBE0;margin:6px 0">${_milestone ? 'Harika!' : 'Level Tamam!'}</div>
-      <div style="font-size:22px;margin:2px 0">${starsHtml}</div>
-      <div style="font-size:14px;color:#A89B89;margin:6px 0">Level ${state.levelNumber} · <span style="color:#E0B23C;font-weight:700">${_score.toLocaleString()}</span> puan</div>
-      ${milestoneHtml}
-      ${breatheHtml}
-      <div style="display:flex;gap:10px;margin:12px 0">
+      <div class="f9-win-stagger" style="animation-delay:120ms;font-size:24px;font-weight:900;color:#F2EBE0;margin:6px 0">${_milestone ? 'Harika!' : 'Level Tamam!'}</div>
+      <div style="font-size:22px;margin:2px 0">${
+        Array.from({length:3}, (_, i) => `<span class="f9-win-star" style="animation-delay:${260 + i*130}ms">${i < stars ? '⭐' : '☆'}</span>`).join('')
+      }</div>
+      <div class="f9-win-stagger" style="animation-delay:620ms;font-size:14px;color:#A89B89;margin:6px 0">Level ${state.levelNumber} · <span id="f9-win-score-value" style="color:#E0B23C;font-weight:700">0</span> puan</div>
+      <div class="f9-win-stagger" style="animation-delay:780ms">
+        ${milestoneHtml}
+        ${breatheHtml}
+      </div>
+      <div class="f9-win-stagger" style="animation-delay:920ms;display:flex;gap:10px;margin:12px 0">
         <div class="f9-result-stat">
           <div style="font-size:18px;font-weight:800;color:#E0B23C">#${myRank}</div>
           <div style="font-size:10px;color:#A89B89">Lig Sıran</div>
@@ -353,17 +358,37 @@ function renderWin() {
           <div style="font-size:10px;color:#E0B23C">Ödül Zonu!</div>
         </div>`:''}
       </div>
-      <button class="f9-play-btn" id="btn-win-next">
-        <span>Sonraki Level →</span>
-      </button>
-      <button class="f9-back-btn" id="btn-win-reward" style="margin-top:8px;background:rgba(83,74,183,0.2);border-color:#534AB7">
-        🎁 Ödülleri Gör
-      </button>
-      <button class="f9-back-btn" id="btn-win-map" style="margin-top:8px;background:transparent;border:1px solid #333">
-        🗺️ Haritaya Dön
-      </button>
+      <div class="f9-win-stagger" style="animation-delay:1080ms">
+        <button class="f9-play-btn" id="btn-win-next">
+          <span>Sonraki Level →</span>
+        </button>
+        <button class="f9-back-btn" id="btn-win-reward" style="margin-top:8px;background:rgba(83,74,183,0.2);border-color:#534AB7">
+          🎁 Ödülleri Gör
+        </button>
+        <button class="f9-back-btn" id="btn-win-map" style="margin-top:8px;background:transparent;border:1px solid #333">
+          🗺️ Haritaya Dön
+        </button>
+      </div>
     </div>
   `;
+
+  // [Oturum 68 — UI polish] Skor sayacı — 0'dan gerçek skora sayarak
+  // yükseliyor, statik olarak birden basılmıyor. Yıldızlar bittikten
+  // hemen sonra başlıyor (bkz. yukarıdaki animation-delay'ler).
+  (function _animateScoreCount() {
+    const el = document.getElementById("f9-win-score-value");
+    if (!el) return;
+    const target = _score;
+    const startDelay = 620, duration = 650;
+    const t0 = performance.now() + startDelay;
+    function tick(now) {
+      const p = Math.min(1, Math.max(0, (now - t0) / duration));
+      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+      el.textContent = Math.round(target * eased).toLocaleString();
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
 
   document.getElementById("btn-win-next")?.addEventListener("click", () => {
     const _nextLvl = state.levelNumber + 1;
