@@ -211,21 +211,28 @@ const F9GameFeel = (() => {
     const parent = numEl.parentElement;
     if (!parent) return;
     if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
+    // [Oturum 82 — kullanıcı bulgusu: "tepkiyi göremedim"] Halka
+    // TEKNİK OLARAK çalışıyordu (doğrulandı) ama diğer eş zamanlı
+    // efektler (particle, hücre dalgası, shockwave) arasında çok
+    // soluk kalıyordu. Artık: kalın kenarlı halka + İÇİ dolu bir
+    // parlama (radial-gradient) birlikte, daha yüksek opaklık.
     const ring = document.createElement("div");
     ring.style.cssText =
-      "position:absolute;left:50%;top:50%;width:22%;height:22%;border-radius:50%;" +
-      "border:2px solid rgba(255,255,255,0.75);pointer-events:none;z-index:0;" +
-      "transform:translate(-50%,-50%) scale(0.3);mix-blend-mode:screen;";
+      "position:absolute;left:50%;top:50%;width:34%;height:34%;border-radius:50%;" +
+      "border:3px solid rgba(255,255,255,0.95);pointer-events:none;z-index:0;" +
+      "background:radial-gradient(circle, rgba(255,255,255,0.55) 0%, transparent 70%);" +
+      "box-shadow:0 0 10px 2px rgba(255,255,255,0.6);" +
+      "transform:translate(-50%,-50%) scale(0.25);mix-blend-mode:screen;";
     parent.insertBefore(ring, numEl);
     if (ring.animate) {
       ring.animate([
-        { transform: "translate(-50%,-50%) scale(0.3)", opacity: 0.85 },
-        { transform: "translate(-50%,-50%) scale(1.3)", opacity: 0.4, offset: 0.55 },
-        { transform: "translate(-50%,-50%) scale(2.2)", opacity: 0 },
-      ], { duration: 600, easing: "ease-out" })
+        { transform: "translate(-50%,-50%) scale(0.25)", opacity: 1 },
+        { transform: "translate(-50%,-50%) scale(1.4)", opacity: 0.7, offset: 0.45 },
+        { transform: "translate(-50%,-50%) scale(2.6)", opacity: 0 },
+      ], { duration: 650, easing: "ease-out" })
         .addEventListener("finish", () => ring.remove());
     } else {
-      setTimeout(() => ring.remove(), 600);
+      setTimeout(() => ring.remove(), 650);
     }
   }
 
