@@ -152,33 +152,46 @@ const F9GameFeel = (() => {
   // kalıyor, bant sayının ARKASINDAN geçiyor (tam "ayna yansıması" hissi).
   function _cellReflectionWave(el) {
     if (!el) return;
-    // 1) Arkaplan: koyudan açığa kısa bir geçiş.
+    // [Oturum 76 — kullanıcı bulgusu: "belli olmuyor"] GERÇEK HATA:
+    // `transition` özelliğini ayarlayıp AYNI JS turunda `background`
+    // değerini değiştirmek, tarayıcıda genelde ÇALIŞIR ama garanti
+    // DEĞİL — bazı durumlarda tarayıcı iki değişikliği TEK BOYAMADA
+    // birleştirip geçiş animasyonunu HİÇ OYNATMADAN atlıyor (aynı
+    // sorunu fx/juice.js'teki shimmer'da da yaşamıştık, orada
+    // `void cell.offsetWidth` ile zorla reflow yapılıp düzeltilmişti —
+    // burada o adım UNUTULMUŞTU). Ayrıca renk de yeterince "açık"
+    // değildi (#4C5690 hâlâ oldukça koyu bir mor) — artık gerçekten
+    // AÇIK bir tona (#E8E2D8, ana arayüzün "açık bej" rengi) gidiyor.
     const prevBg = el.style.background;
     const prevTransition = el.style.transition;
-    el.style.transition = "background 0.30s ease-out";
-    el.style.background = "linear-gradient(145deg, #4C5690 0%, #3B4478 100%)"; // açık ton (mevcut koyu #1A1E35/#141728'in açığı)
+    el.style.transition = "none";
+    el.style.background = prevBg || getComputedStyle(el).backgroundImage; // mevcut koyu hâli sabitle
+    void el.offsetWidth; // ZORLA REFLOW — transition'ın gerçekten tetiklenmesini garantiler
+    el.style.transition = "background 0.32s ease-out";
+    el.style.background = "linear-gradient(145deg, #E8E2D8 0%, #C9C2B4 100%)"; // gerçekten AÇIK ton
     setTimeout(() => {
       el.style.background = prevBg || "";
-      setTimeout(() => { el.style.transition = prevTransition || ""; }, 320);
-    }, 190);
+      setTimeout(() => { el.style.transition = prevTransition || ""; }, 340);
+    }, 260);
 
     // 2) Ayna yansıması bandı — çapraz kayan parlak gradyan, sayının
     //    ARKASINDA (ilk child olarak eklendiği için doğal DOM sırasıyla
-    //    sonradan eklenen sayı her zaman üstte kalır).
+    //    sonradan eklenen sayı her zaman üstte kalır). Arka plan
+    //    geçişiyle (260ms açık + fade) SÜRESİ EŞLEŞTİRİLDİ.
     const sweep = document.createElement("div");
     sweep.style.cssText =
       "position:absolute;inset:0;pointer-events:none;z-index:0;border-radius:inherit;overflow:hidden;" +
-      "background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.5) 47%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.5) 53%, transparent 70%);" +
+      "background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.65) 46%, rgba(255,255,255,0.98) 50%, rgba(255,255,255,0.65) 54%, transparent 75%);" +
       "transform:translateX(-140%);";
     el.insertBefore(sweep, el.firstChild);
     if (sweep.animate) {
       sweep.animate([
         { transform: "translateX(-140%)" },
         { transform: "translateX(140%)" },
-      ], { duration: 430, easing: "ease-in-out" })
+      ], { duration: 520, easing: "ease-in-out" })
         .addEventListener("finish", () => sweep.remove());
     } else {
-      setTimeout(() => sweep.remove(), 430);
+      setTimeout(() => sweep.remove(), 520);
     }
   }
 
