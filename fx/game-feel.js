@@ -199,6 +199,36 @@ const F9GameFeel = (() => {
     }
   }
 
+  // [Oturum 81 — kullanıcı isteği: "sayıların kendisine de havuza
+  // atılan taş efektini ver", SADECE sayının üzerinde, hücre arka
+  // planına DOKUNMADAN] Sayının kendi görselinin (img veya span,
+  // ui/renderer.js'in ürettiği) ÜZERİNDE genişleyen bir su halkası —
+  // Oturum 78'deki hücre dalgasından TAMAMEN BAĞIMSIZ, ayrı bir
+  // eleman. Sayının ARKASINA ekleniyor (insertBefore), böylece sayı
+  // hep üstte okunur kalıyor.
+  function _numberRippleWave(numEl) {
+    if (!numEl) return;
+    const parent = numEl.parentElement;
+    if (!parent) return;
+    if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
+    const ring = document.createElement("div");
+    ring.style.cssText =
+      "position:absolute;left:50%;top:50%;width:22%;height:22%;border-radius:50%;" +
+      "border:2px solid rgba(255,255,255,0.75);pointer-events:none;z-index:0;" +
+      "transform:translate(-50%,-50%) scale(0.3);mix-blend-mode:screen;";
+    parent.insertBefore(ring, numEl);
+    if (ring.animate) {
+      ring.animate([
+        { transform: "translate(-50%,-50%) scale(0.3)", opacity: 0.85 },
+        { transform: "translate(-50%,-50%) scale(1.3)", opacity: 0.4, offset: 0.55 },
+        { transform: "translate(-50%,-50%) scale(2.2)", opacity: 0 },
+      ], { duration: 600, easing: "ease-out" })
+        .addEventListener("finish", () => ring.remove());
+    } else {
+      setTimeout(() => ring.remove(), 600);
+    }
+  }
+
   function celebrateMerge(r, c) {
     if (r == null || c == null) return;
     // [Oturum 71] 4x4 grid parçacık patlaması. Bu, board container'ın
@@ -241,6 +271,10 @@ const F9GameFeel = (() => {
         { transform: "scale(1.16)" },
         { transform: "scale(1)" },
       ], { duration: 220, easing: "ease-out" });
+      // [Oturum 81] Sayının kendisi üzerinde AYRI bir su halkası —
+      // hücre arka planına dokunmuyor, sadece img/span'ın kendi alanında.
+      const numEl = el.querySelector(":scope > img, :scope > span");
+      _numberRippleWave(numEl);
       // Etraftaki hücreler de aynı yansıma dalgasını, merkeze olan
       // mesafeye göre kademeli gecikmeyle ve AZALAN GÜÇLE alıyor — su
       // dalgası gibi dışarı doğru yayılıp yumuşayarak zayıflıyor.
