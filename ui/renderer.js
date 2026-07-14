@@ -336,8 +336,21 @@ function attachBoardListener() {
   // pointerdown'da, 2. hücre komşuya girince), aynı test edilmiş oyun
   // mantığını (popup menü dahil, state.pendingOptions zaten var)
   // kullanıyor.
+  //
+  // [Oturum 65 — DÜZELTME, kullanıcı bulgusu: "sürükle bırak eşleşme
+  // olmadı"] KÖK NEDEN: pointerdown içinde handleCellClick() çağrısı
+  // renderBoardOnly()'yi tetikliyor, bu da TÜM .f9-cell div'lerini
+  // YENİDEN OLUŞTURUYOR (eskisini yok edip yenisini koyuyor). Dokunmatik
+  // ekranlarda tarayıcı, dokunulan elemente OTOMATİK "implicit pointer
+  // capture" uyguluyor — o eleman DOM'dan kaldırılınca (yeniden render),
+  // sonraki pointermove/pointerup olayları HİÇ GELMİYOR (capture edilen
+  // düğüm artık belgede değil). Çözüm: pointerdown'da capture'ı
+  // AÇIKÇA sabit `container`'a (kendisi asla yeniden oluşturulmuyor,
+  // sadece içeriği değişiyor) taşı — böylece hücreler yeniden render
+  // olsa bile olaylar kaybolmuyor.
   let _dragStartCell = null;
   let _dragConsumed = false;
+  let _activePointerId = null;
 
   function _cellFromPoint(x, y) {
     const el = document.elementFromPoint(x, y);
@@ -353,11 +366,18 @@ function attachBoardListener() {
     if (!cell) return;
     _dragStartCell = cell;
     _dragConsumed = false;
+    _activePointerId = e.pointerId;
+    // Dokunulan hücrenin olası implicit capture'ını bırak, onun yerine
+    // SABİT container'a al — hücre yeniden render olsa bile olaylar
+    // kesilmesin.
+    try { e.target.releasePointerCapture?.(e.pointerId); } catch (_) {}
+    try { container.setPointerCapture?.(e.pointerId); } catch (_) {}
     handleCellClick(cell.r, cell.c); // 1. hücre — mevcut seçim mantığı
   });
 
   container.addEventListener("pointermove", (e) => {
     if (!_dragStartCell || _dragConsumed) return;
+    if (_activePointerId !== null && e.pointerId !== _activePointerId) return;
     const cell = _cellFromPoint(e.clientX, e.clientY);
     if (!cell || (cell.r === _dragStartCell.r && cell.c === _dragStartCell.c)) return;
     const isNeighbor =
@@ -368,10 +388,16 @@ function attachBoardListener() {
     handleCellClick(cell.r, cell.c); // 2. hücre — gerçek hamle denemesi (popup dahil)
   });
 
-  function _endDrag() { _dragStartCell = null; _dragConsumed = false; }
+  function _endDrag(e) {
+    if (_activePointerId !== null) {
+      try { container.releasePointerCapture?.(_activePointerId); } catch (_) {}
+    }
+    _dragStartCell = null;
+    _dragConsumed = false;
+    _activePointerId = null;
+  }
   container.addEventListener("pointerup", _endDrag);
   container.addEventListener("pointercancel", _endDrag);
-  container.addEventListener("pointerleave", _endDrag);
 
   _boardListenerEl = container;
 }
