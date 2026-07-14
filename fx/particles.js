@@ -94,6 +94,45 @@ const F9Particles = (() => {
     _startLoop();
   }
 
+  // [Oturum 71 — kullanıcı isteği: "matris efektinin 4x4 olarak
+  // olabilir", daha şaşırtıcı] "Matrix" tarzı gridli patlama — rastgele
+  // daireler yerine DÜZENLİ bir 4x4 kare matrisinin merkezden dışarı
+  // fırlaması. Sayı/matematik temalı oyuna görsel olarak daha uygun,
+  // dijital/piksel hissi veriyor — normal burst()'ten kasıtlı olarak
+  // FARKLI (kare parçacıklar, döngüsüz, düzenli grid diziliş).
+  function burstGrid(x, y, opts = {}) {
+    const canvas = _ensureCanvas();
+    if (!canvas) return;
+    if (canvas.width === 0 || canvas.height === 0) _resize();
+    if (canvas.width === 0 || canvas.height === 0) return;
+    const colors = Array.isArray(opts.color) ? opts.color : [opts.color || "#FFFFFF"];
+    const spacing = opts.spacing || 7;   // grid hücreleri arası başlangıç mesafesi (px)
+    const speed   = opts.speed || 2.2;
+    const life    = opts.life || 380;
+    const size    = opts.size || 3;
+    const gridSize = 4;
+    const half = (gridSize - 1) / 2;
+    for (let gy = 0; gy < gridSize; gy++) {
+      for (let gx = 0; gx < gridSize; gx++) {
+        const ox = (gx - half) * spacing;
+        const oy = (gy - half) * spacing;
+        const dist = Math.hypot(ox, oy) || 1;
+        const dirX = ox / dist, dirY = oy / dist;
+        _particles.push({
+          x: x + ox * 0.3, y: y + oy * 0.3, // hafif merkezden başlasın, grid şekli hemen belli olsun
+          vx: dirX * speed, vy: dirY * speed,
+          gravity: opts.gravity ?? 0.02,
+          life, maxLife: life,
+          size,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: 0, rotSpeed: 0,
+          shape: "square", // "matrix" hissi için hep kare — burst()'teki karışık daire/kare değil
+        });
+      }
+    }
+    _startLoop();
+  }
+
   // Bir hücreden (r,c) doğrudan patlama parçacığı fırlat — kolaylık sarmalayıcı.
   function burstAtCell(r, c, opts = {}) {
     const pos = cellCenter(r, c);
@@ -151,5 +190,5 @@ const F9Particles = (() => {
 
   function activeCount() { return _particles.length; }
 
-  return { burst, burstAtCell, cellCenter, clear, activeCount };
+  return { burst, burstGrid, burstAtCell, cellCenter, clear, activeCount };
 })();

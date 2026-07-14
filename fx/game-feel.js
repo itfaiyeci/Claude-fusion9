@@ -146,12 +146,14 @@ const F9GameFeel = (() => {
   // yormamalı, ama "hiçbir şey olmuyor" hissini kırmalı.
   function celebrateMerge(r, c) {
     if (r == null || c == null) return;
-    // Küçük, nazik bir parçacık serpintisi — patlama değil.
+    // [Oturum 71 — kullanıcı isteği: "şaşırtıcı değil, matris efekti
+    // 4x4 olabilir"] Rastgele daire yerine düzenli 4x4 kare grid
+    // patlaması — daha ayırt edici, sayı temasına daha uygun.
     if (typeof F9Particles !== "undefined") {
       const pos = F9Particles.cellCenter(r, c);
       if (pos) {
-        F9Particles.burst(pos.x, pos.y, {
-          count: 8, color: ["#FFFFFF", "#D8D2C8"], speed: 1.3, life: 320, gravity: 0.08, size: [1.5, 3],
+        F9Particles.burstGrid(pos.x, pos.y, {
+          color: ["#FFFFFF", "#D8D2C8", "#A78BFA"], speed: 2.4, life: 360, spacing: 7, size: 3,
         });
       }
     }
