@@ -236,13 +236,51 @@ const F9GameFeel = (() => {
     }
   }
 
+  // [Oturum 84 — kullanıcı isteği: "efektler sahne ışıltısı gibi olsun,
+  // daha estetik"] Referans görseldeki ışın huzmeleri (merkezden dışarı
+  // yayılan ince ışık çizgileri, "yıldız patlaması/sahne ışığı" hissi)
+  // eksikti — eklendi. Kıvılcımlar da daha KÜÇÜK, daha ÇOK, daha
+  // İNCE/zarif titreşimli hale getirildi (önceki büyük/az sayıda
+  // "oyunsu" kıvılcımlar yerine).
+  function _numberLightRays(numEl, count = 8) {
+    if (!numEl) return;
+    const parent = numEl.parentElement;
+    if (!parent) return;
+    if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
+    for (let i = 0; i < count; i++) {
+      const angle = (360 / count) * i;
+      const ray = document.createElement("div");
+      const length = 60 + Math.random() * 20; // %
+      ray.style.cssText =
+        `position:absolute;left:50%;top:50%;width:1.5px;height:${length}%;` +
+        "background:linear-gradient(to bottom, rgba(255,250,225,0.95) 0%, rgba(255,230,160,0.35) 55%, transparent 100%);" +
+        "pointer-events:none;z-index:0;transform-origin:top center;" +
+        `transform:translate(-50%,0) rotate(${angle}deg) scaleY(0);` +
+        "mix-blend-mode:screen;";
+      parent.insertBefore(ray, numEl);
+      if (ray.animate) {
+        ray.animate([
+          { transform: `translate(-50%,0) rotate(${angle}deg) scaleY(0)`, opacity: 0 },
+          { transform: `translate(-50%,0) rotate(${angle}deg) scaleY(1)`, opacity: 0.9, offset: 0.3 },
+          { transform: `translate(-50%,0) rotate(${angle}deg) scaleY(1.15)`, opacity: 0 },
+        ], { duration: 550, easing: "ease-out" })
+          .addEventListener("finish", () => ray.remove());
+      } else {
+        setTimeout(() => ray.remove(), 550);
+      }
+    }
+  }
+
   // [Oturum 83 — kullanıcı isteği: referans görsel, "parlayan sayılara
   // bitişik parlayan yıldız efekti", halkaya EK olarak] Sayının
   // etrafına saçılan küçük 4 köşeli yıldız/kıvılcım şekilleri —
   // klasik "sparkle" ikonu (clip-path ile elmas/yıldız), her biri
   // farklı açıda dışarı fırlayıp döner ve söner. Halkayla (yukarısı)
   // AYNI ANDA, ona ek olarak çalışıyor.
-  function _numberSparkleBurst(numEl, count = 5) {
+  // [Oturum 84 — "daha estetik"] Sayı ve boyut aralığı KÜÇÜLTÜLDÜ —
+  // az sayıda büyük kıvılcım yerine çok sayıda küçük, zarif titreşen
+  // toz taneciği hissi (gerçek sahne ışıltısı gibi).
+  function _numberSparkleBurst(numEl, count = 9) {
     if (!numEl) return;
     const parent = numEl.parentElement;
     if (!parent) return;
@@ -250,25 +288,29 @@ const F9GameFeel = (() => {
     const STAR_CLIP = "polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%)";
     for (let i = 0; i < count; i++) {
       const angle = (360 / count) * i + (Math.random() * 30 - 15); // eşit aralıklı + hafif rastgelelik
-      const dist = 55 + Math.random() * 25; // % — sayının merkezinden ne kadar uzağa fırlasın
+      const dist = 45 + Math.random() * 35; // % — sayının merkezinden ne kadar uzağa fırlasın
       const dx = Math.cos(angle * Math.PI / 180) * dist;
       const dy = Math.sin(angle * Math.PI / 180) * dist;
-      const size = 14 + Math.random() * 10;
+      const size = 5 + Math.random() * 7; // [Oturum 84] küçültüldü (önceki 14-24px -> 5-12px)
       const star = document.createElement("div");
       star.style.cssText =
         `position:absolute;left:50%;top:50%;width:${size}px;height:${size}px;` +
         "background:linear-gradient(135deg,#FFFFFF 0%,#FFE9A8 60%,#E0B23C 100%);" +
         `clip-path:${STAR_CLIP};pointer-events:none;z-index:0;` +
         "transform:translate(-50%,-50%) scale(0) rotate(0deg);" +
-        "box-shadow:0 0 6px 1px rgba(255,230,160,0.8);";
+        "box-shadow:0 0 5px 1px rgba(255,230,160,0.85);";
       parent.insertBefore(star, numEl);
       const endX = `calc(-50% + ${dx}%)`, endY = `calc(-50% + ${dy}%)`;
+      // [Oturum 84] Titreşim (twinkle) — büyürken küçük bir "nabız"
+      // atsın, tek düze büyüyüp sönmesin, gerçek ışıltı hissi versin.
       if (star.animate) {
         star.animate([
           { transform: "translate(-50%,-50%) scale(0) rotate(0deg)", offset: 0, opacity: 1 },
-          { transform: `translate(${endX},${endY}) scale(1) rotate(90deg)`, offset: 0.4, opacity: 1 },
-          { transform: `translate(${endX},${endY}) scale(0.3) rotate(160deg)`, offset: 1, opacity: 0 },
-        ], { duration: 620 + Math.random() * 150, easing: "cubic-bezier(0.2,0.8,0.3,1)" })
+          { transform: `translate(${endX},${endY}) scale(1.1) rotate(70deg)`, offset: 0.32, opacity: 1 },
+          { transform: `translate(${endX},${endY}) scale(0.7) rotate(110deg)`, offset: 0.5, opacity: 0.75 },
+          { transform: `translate(${endX},${endY}) scale(1) rotate(150deg)`, offset: 0.68, opacity: 0.9 },
+          { transform: `translate(${endX},${endY}) scale(0.2) rotate(200deg)`, offset: 1, opacity: 0 },
+        ], { duration: 700 + Math.random() * 200, easing: "ease-in-out" })
           .addEventListener("finish", () => star.remove());
       } else {
         setTimeout(() => star.remove(), 700);
@@ -322,6 +364,8 @@ const F9GameFeel = (() => {
       // hücre arka planına dokunmuyor, sadece img/span'ın kendi alanında.
       const numEl = el.querySelector(":scope > img, :scope > span");
       _numberRippleWave(numEl);
+      // [Oturum 84] Işın huzmeleri — "sahne ışıltısı" hissi, kıvılcımlardan ÖNCE (ışık patlaması önce başlar)
+      _numberLightRays(numEl);
       // [Oturum 83] Halkaya EK olarak — sayının etrafına saçılan yıldız/kıvılcımlar.
       _numberSparkleBurst(numEl);
       // Etraftaki hücreler de aynı yansıma dalgasını, merkeze olan
