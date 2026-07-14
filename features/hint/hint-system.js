@@ -8,6 +8,73 @@ const F9Hint = (() => {
   const GLOW_COLOR = "#FFD700"; // altın sarısı
   const GLOW_COLOR_FOCUS = "#4FE0A0"; // [Oturum 64] müfredat hedefi hamlesi — normal ipucundan AYIRT EDİLSİN diye farklı (yeşilimsi) renk
 
+  // [Oturum 90 — kullanıcı isteği: "büyük şeklin daha büyük kazanç
+  // olduğunu göstermeli ama zorlamamalı, küçük çalışmalar da mutlu
+  // etmeli"] Pasif "fırsat" taraması — tahtada ZATEN duran 9'lardan bir
+  // kısmı büyük bir şeklin (4-7'li) YARISINDAN FAZLASINI tamamlamışsa,
+  // ara sıra (birkaç saniyede bir, SÜREKLİ DEĞİL) o hücreler farklı/
+  // soluk bir tonda hafifçe parlıyor. Hiçbir popup, hiçbir zorunlu
+  // hamle, hiçbir şey ENGELLENMİYOR — sadece dikkatli oyuncu fark eder.
+  // Normal ipucu döngüsünden (idle-tetiklenmeli) TAMAMEN AYRI, kendi
+  // periyodik zamanlayıcısı var — aktif oynanırken bile ara sıra görünür.
+  const OPPORTUNITY_COLOR = "#7EC8E3"; // soluk mavi — altın (GLOW_COLOR) ve yeşilden (FOCUS) AYIRT edilsin
+  const OPPORTUNITY_INTERVAL_MS = 7000; // her ~7 saniyede bir kontrol
+  const OPPORTUNITY_SHOW_MS = 2200; // parıltının görünür kaldığı süre
+  let _oppTimer = null;
+
+  function _findBigShapeOpportunity(gc) {
+    if (!gc || !gc.board) return null;
+    let best = null, bestRatio = 0;
+    for (const shape of ALL_FIXED_SHAPES) {
+      if (shape.group === GROUP_A) continue; // 3'lü zaten kolay/sık oluşuyor, fırsat vurgusu gerekmiyor
+      const maxDr = Math.max(...shape.cells.map(([r]) => r));
+      const maxDc = Math.max(...shape.cells.map(([, c]) => c));
+      for (let br = 0; br <= GRID - 1 - maxDr; br++) {
+        for (let bc = 0; bc <= GRID - 1 - maxDc; bc++) {
+          const absCells = shape.cells.map(([r, c]) => [br + r, bc + c]);
+          const nineCells = absCells.filter(([r, c]) => gc.board.getCell(r, c) === 9);
+          const ratio = nineCells.length / shape.cells.length;
+          // Tam tamamlanmışsa zaten eşleşip temizlenmiş olurdu — bu
+          // yüzden ratio===1 pratikte görünmez ama yine de dışlıyoruz.
+          if (ratio >= 0.5 && ratio < 1 && nineCells.length >= 2 && ratio > bestRatio) {
+            bestRatio = ratio;
+            best = { cells: nineCells, group: shape.group };
+          }
+        }
+      }
+    }
+    return best;
+  }
+
+  function _showOpportunity() {
+    if (!_active) return;
+    if (_glowEls.length) return; // normal ipucu şu an gösteriliyorsa araya girme
+    const gc = state?.gc;
+    const opp = _findBigShapeOpportunity(gc);
+    if (!opp) return;
+    const els = [];
+    for (const [r, c] of opp.cells) {
+      const el = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+      if (!el) continue;
+      els.push(el);
+      el.style.transition = "box-shadow 0.8s ease-in-out";
+      el.style.boxShadow = `0 0 10px 2px ${OPPORTUNITY_COLOR}55, inset 0 0 6px ${OPPORTUNITY_COLOR}33`;
+    }
+    setTimeout(() => {
+      els.forEach(el => { el.style.boxShadow = ""; });
+    }, OPPORTUNITY_SHOW_MS);
+  }
+
+  function _scheduleOpportunity() {
+    _clearOpportunityTimer();
+    if (!_active) return;
+    _oppTimer = setTimeout(() => { _showOpportunity(); _scheduleOpportunity(); }, OPPORTUNITY_INTERVAL_MS);
+  }
+
+  function _clearOpportunityTimer() {
+    if (_oppTimer) { clearTimeout(_oppTimer); _oppTimer = null; }
+  }
+
   // [Oturum 64 — kullanıcı isteği: "bu şekilleri oluşturması için
   // ipucu göstermekte fayda var"] Şu an hangi öğretim bölümündeyiz
   // (varsa) ve hedefi ne — core/game-engine.js'teki TUTORIAL_CURRICULUM
@@ -172,8 +239,8 @@ const F9Hint = (() => {
     _schedule();
   }
 
-  function activate()   { _active=true;  _schedule(); }
-  function deactivate() { _active=false; _clearTimer(); _clearGlow(); }
+  function activate()   { _active=true;  _schedule(); _scheduleOpportunity(); }
+  function deactivate() { _active=false; _clearTimer(); _clearGlow(); _clearOpportunityTimer(); }
 
   return { onMove, activate, deactivate };
 })();
