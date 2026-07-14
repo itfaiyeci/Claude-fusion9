@@ -236,6 +236,46 @@ const F9GameFeel = (() => {
     }
   }
 
+  // [Oturum 83 — kullanıcı isteği: referans görsel, "parlayan sayılara
+  // bitişik parlayan yıldız efekti", halkaya EK olarak] Sayının
+  // etrafına saçılan küçük 4 köşeli yıldız/kıvılcım şekilleri —
+  // klasik "sparkle" ikonu (clip-path ile elmas/yıldız), her biri
+  // farklı açıda dışarı fırlayıp döner ve söner. Halkayla (yukarısı)
+  // AYNI ANDA, ona ek olarak çalışıyor.
+  function _numberSparkleBurst(numEl, count = 5) {
+    if (!numEl) return;
+    const parent = numEl.parentElement;
+    if (!parent) return;
+    if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
+    const STAR_CLIP = "polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%)";
+    for (let i = 0; i < count; i++) {
+      const angle = (360 / count) * i + (Math.random() * 30 - 15); // eşit aralıklı + hafif rastgelelik
+      const dist = 55 + Math.random() * 25; // % — sayının merkezinden ne kadar uzağa fırlasın
+      const dx = Math.cos(angle * Math.PI / 180) * dist;
+      const dy = Math.sin(angle * Math.PI / 180) * dist;
+      const size = 14 + Math.random() * 10;
+      const star = document.createElement("div");
+      star.style.cssText =
+        `position:absolute;left:50%;top:50%;width:${size}px;height:${size}px;` +
+        "background:linear-gradient(135deg,#FFFFFF 0%,#FFE9A8 60%,#E0B23C 100%);" +
+        `clip-path:${STAR_CLIP};pointer-events:none;z-index:0;` +
+        "transform:translate(-50%,-50%) scale(0) rotate(0deg);" +
+        "box-shadow:0 0 6px 1px rgba(255,230,160,0.8);";
+      parent.insertBefore(star, numEl);
+      const endX = `calc(-50% + ${dx}%)`, endY = `calc(-50% + ${dy}%)`;
+      if (star.animate) {
+        star.animate([
+          { transform: "translate(-50%,-50%) scale(0) rotate(0deg)", offset: 0, opacity: 1 },
+          { transform: `translate(${endX},${endY}) scale(1) rotate(90deg)`, offset: 0.4, opacity: 1 },
+          { transform: `translate(${endX},${endY}) scale(0.3) rotate(160deg)`, offset: 1, opacity: 0 },
+        ], { duration: 620 + Math.random() * 150, easing: "cubic-bezier(0.2,0.8,0.3,1)" })
+          .addEventListener("finish", () => star.remove());
+      } else {
+        setTimeout(() => star.remove(), 700);
+      }
+    }
+  }
+
   function celebrateMerge(r, c) {
     if (r == null || c == null) return;
     // [Oturum 71] 4x4 grid parçacık patlaması. Bu, board container'ın
@@ -282,6 +322,8 @@ const F9GameFeel = (() => {
       // hücre arka planına dokunmuyor, sadece img/span'ın kendi alanında.
       const numEl = el.querySelector(":scope > img, :scope > span");
       _numberRippleWave(numEl);
+      // [Oturum 83] Halkaya EK olarak — sayının etrafına saçılan yıldız/kıvılcımlar.
+      _numberSparkleBurst(numEl);
       // Etraftaki hücreler de aynı yansıma dalgasını, merkeze olan
       // mesafeye göre kademeli gecikmeyle ve AZALAN GÜÇLE alıyor — su
       // dalgası gibi dışarı doğru yayılıp yumuşayarak zayıflıyor.
