@@ -51,11 +51,20 @@ const F9Particles = (() => {
     };
   }
 
-  // Bir noktadan patlama parçacıkları fırlat.
+  // Bir patlamadan patlama parçacıkları fırlat.
   // color: hex string veya hex dizisi (karışık renk patlaması için)
   function burst(x, y, opts = {}) {
     const canvas = _ensureCanvas();
     if (!canvas) return;
+    // [Oturum 69 — kullanıcı bulgusu: "efektler görünmüyor/çok pasif"]
+    // GÜVENLİK KONTROLÜ: canvas'ın PİKSEL boyutu (canvas.width/height)
+    // sadece _ensureCanvas() İLK ÇAĞRILDIĞINDA _resize() ile ayarlanıyordu
+    // — eğer o an tahta henüz tam yerleşmemişse (örn. geçiş animasyonu
+    // sürerken, 0 genişlik/yükseklik), canvas SONSUZA KADAR 0×0 kalıyordu
+    // (sadece pencere yeniden boyutlanınca düzeliyordu). Artık HER
+    // patlamada boyut kontrol ediliyor, gerçekte 0 ise yeniden ölçülüyor.
+    if (canvas.width === 0 || canvas.height === 0) _resize();
+    if (canvas.width === 0 || canvas.height === 0) return; // tahta gerçekten hâlâ görünür değil, çizmeye gerek yok
     const count = Math.min(opts.count || 40, MAX_PARTICLES - _particles.length);
     if (count <= 0) return;
     const colors = Array.isArray(opts.color) ? opts.color : [opts.color || "#FFFFFF"];
