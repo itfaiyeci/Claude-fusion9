@@ -38,12 +38,47 @@ const F9GameFeel = (() => {
     return { a: "#3E8FD4", b: "#4FB87A", c: "#A78BFA", d: "#FF6B35", e: "#FFD700" }[group] || "#FFFFFF";
   }
 
+  // [Oturum 68 — kullanıcı isteği: "sürükleyici, aksiyon", ekran flaşı +
+  // slow-motion] Tam bir zaman-yavaşlatma motoru YOK (bu bir oyun döngüsü/
+  // deltaTime tabanlı motor değil, DOM+CSS+setTimeout tabanlı) — bunun
+  // yerine dövüş oyunlarındaki "hitstop" tekniği: büyük patlamadan HEMEN
+  // ÖNCE kısa bir duraklama (ekran donmuş gibi), SONRA kamera+particle+ses
+  // hep birlikte patlıyor. Beyin bunu "zaman büküldü" olarak algılıyor.
+  // Sadece BÜYÜK eşleşmelerde (n≥6) tetiklenir — küçük 3'lü/4'lü'lerde
+  // her patlamada duraklama olursa oyun YAVAŞ hisseder, tam tersi etki.
+  function _flash(intensity, durationMs) {
+    const container = document.getElementById("f9-board-container");
+    if (!container) return;
+    if (getComputedStyle(container).position === "static") container.style.position = "relative";
+    const el = document.createElement("div");
+    el.style.cssText = "position:absolute;inset:0;background:#FFFFFF;pointer-events:none;z-index:70;border-radius:inherit;opacity:0;";
+    container.appendChild(el);
+    el.animate([
+      { opacity: 0 },
+      { opacity: intensity, offset: 0.18 },
+      { opacity: 0 },
+    ], { duration: durationMs, easing: "ease-out" })
+      .addEventListener("finish", () => el.remove());
+  }
+
+  function _hitstop(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   // Bir patlamanın TÜM görsel/işitsel/fiziksel tepkisini tetikler.
   // cells: [[r,c],...] — patlayan hücreler.
-  function celebrateBlast(cells, opts = {}) {
+  async function celebrateBlast(cells, opts = {}) {
     if (!cells || cells.length === 0) return;
     const color = opts.color || "#FFFFFF";
     const n = cells.length;
+
+    // [Oturum 68] Büyük patlama (n≥6): flaş + hitstop, KAMERA/PARÇACIK/
+    // SESTEN ÖNCE — "an" burada başlıyor hissi.
+    if (n >= 6) {
+      const bigness = Math.min(1, (n - 6) / 3); // n=6 -> 0, n=9+ -> 1 (Diamond/Matrix'te tam güç)
+      _flash(0.30 + bigness * 0.55, 160 + bigness * 140);
+      await _hitstop(35 + bigness * 85); // ~35ms (6'lı) - ~120ms (Diamond/Matrix)
+    }
 
     // 1) Kamera sarsıntısı — boyuta göre (kullanıcının tablosuyla birebir)
     F9Camera.shakeForMatch(n);
