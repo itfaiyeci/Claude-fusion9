@@ -157,9 +157,27 @@ const F9GameFeel = (() => {
         });
       }
     }
-    // Sonuç hücresinde kısa bir "pop" — büyüyüp normale dönme.
+    // [Oturum 72 — kullanıcı bulgusu: "efekt oluyor ama beyazlamıyor"]
+    // Eşleşen hücreler zaten flow/rewardFlow.js'te bir "anlık parla"
+    // efekti alıyordu (arka plan beyaza dönüp box-shadow ile parlıyor,
+    // bkz. "Eski JS flash") — ama bu SADECE gerçek eşleşme olduğunda
+    // çalışıyordu. Düz birleştirmede (bu fonksiyon) hücrenin kendisi
+    // HİÇ parlamıyordu, sadece küçük parçacıklar vardı. Artık AYNI
+    // desen (kısa süreli beyaz parlama + hafif büyüme) düz
+    // birleştirmede de var — match'teki kadar güçlü değil (daha kısa
+    // süre, daha az glow) ki ikisi ayırt edilebilir kalsın.
     const el = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
     if (el) {
+      const prevTransition = el.style.transition;
+      el.style.transition = "none";
+      el.style.boxShadow = "0 0 10px #FFFFFFAA, inset 0 0 6px #FFFFFF88";
+      el.style.filter = "brightness(1.5)";
+      setTimeout(() => {
+        el.style.transition = "box-shadow 0.28s ease-out, filter 0.28s ease-out";
+        el.style.boxShadow = "";
+        el.style.filter = "";
+        setTimeout(() => { el.style.transition = prevTransition || ""; }, 300);
+      }, 90);
       el.animate?.([
         { transform: "scale(1)" },
         { transform: "scale(1.16)" },
