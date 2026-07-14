@@ -223,7 +223,15 @@ const F9GameFeel = (() => {
       "background:radial-gradient(circle, rgba(255,255,255,0.55) 0%, transparent 70%);" +
       "box-shadow:0 0 10px 2px rgba(255,255,255,0.6);" +
       "transform:translate(-50%,-50%) scale(0.25);mix-blend-mode:screen;";
-    parent.insertBefore(ring, numEl);
+    // [Oturum 85 — kullanıcı bulgusu: "kutulardaki efekt ok, sayılardaki
+    // nerede"] KÖK NEDEN: sayı görseli (<img>, %100 boyutlu) OPAK —
+    // arkasına eklenen (insertBefore) hiçbir şey görünmüyordu, görsel
+    // tarafından tamamen gizleniyordu. Hücre dalgası (Oturum 78) görünür
+    // çünkü document.body'ye bağlı AYRI, sabit-konumlu bir eleman
+    // (görselin İÇİNDE değil). Artık bu üç efekt (halka/ışın/kıvılcım)
+    // sayının ÖNÜNE (appendChild, en son çocuk) ekleniyor, screen blend
+    // ile üstüne biniyor — görünür oluyor ama sayıyı boğmuyor.
+    parent.appendChild(ring);
     if (ring.animate) {
       ring.animate([
         { transform: "translate(-50%,-50%) scale(0.25)", opacity: 1 },
@@ -257,7 +265,7 @@ const F9GameFeel = (() => {
         "pointer-events:none;z-index:0;transform-origin:top center;" +
         `transform:translate(-50%,0) rotate(${angle}deg) scaleY(0);` +
         "mix-blend-mode:screen;";
-      parent.insertBefore(ray, numEl);
+      parent.appendChild(ray); // [Oturum 85] görselin ÖNÜNE — arkası opak olduğu için görünmüyordu
       if (ray.animate) {
         ray.animate([
           { transform: `translate(-50%,0) rotate(${angle}deg) scaleY(0)`, opacity: 0 },
@@ -299,7 +307,7 @@ const F9GameFeel = (() => {
         `clip-path:${STAR_CLIP};pointer-events:none;z-index:0;` +
         "transform:translate(-50%,-50%) scale(0) rotate(0deg);" +
         "box-shadow:0 0 5px 1px rgba(255,230,160,0.85);";
-      parent.insertBefore(star, numEl);
+      parent.appendChild(star); // [Oturum 85] görselin ÖNÜNE — arkası opak olduğu için görünmüyordu
       const endX = `calc(-50% + ${dx}%)`, endY = `calc(-50% + ${dy}%)`;
       // [Oturum 84] Titreşim (twinkle) — büyürken küçük bir "nabız"
       // atsın, tek düze büyüyüp sönmesin, gerçek ışıltı hissi versin.
