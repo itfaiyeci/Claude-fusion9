@@ -139,59 +139,63 @@ const F9GameFeel = (() => {
     if (typeof playSound === "function") playSound("lose");
   }
 
-  // [Oturum 75 — kullanıcı isteği, netleştirilmiş (5. deneme): "hücrelerin
-  // renklerini koyu renkten açık renk yapacaksın, sayılar hariç. Karelerin
-  // içinden ayna yansıması dalgası olacak."]
-  // ÖNCEKİ HATA: filter:brightness(...) kullanıyordum — CSS filter,
-  // elementin İÇİNDEKİ HER ŞEYİ (sayı dahil) birlikte etkiler, bu yüzden
-  // "sayılar hariç" isteği karşılanamıyordu. DÜZELTME: artık SADECE
-  // hücrenin `background` özelliği değişiyor (koyu->açık geçiş, sayıyı
-  // hiç etkilemez — background her zaman sayının ARKASINDA) + ayrı bir
-  // "yansıma bandı" (çapraz, parlak bir gradyan) hücrenin İLK ÇOCUĞU
-  // olarak eklenip kayıyor — sayı z-index/DOM sırası gereği HEP ÜSTTE
-  // kalıyor, bant sayının ARKASINDAN geçiyor (tam "ayna yansıması" hissi).
-  function _cellReflectionWave(el) {
+  // [Oturum 78 — kullanıcı isteği: "suya atılan taşın dalgası gibi,
+  // daha yumuşak"] Önceki yaklaşım `background` özelliğini SERT bir
+  // şekilde koyu<->açık arasında değiştiriyordu (anlık, tek bir sabit
+  // renk). Artık: (1) sert renk DEĞİŞİMİ yerine YUMUŞAK bir "ışık"
+  // katmanı — screen blend ile koyu arka planın üstüne biniyor,
+  // opacity ile YAVAŞÇA belirip yavaşça sönüyor (su yüzeyindeki ışık
+  // yansıması gibi), (2) merkeze YAKIN hücreler GÜÇLÜ, UZAK hücreler
+  // SOLUK — gerçek bir su dalgasının enerjisinin mesafeyle azalması
+  // gibi (intensity parametresi). Katman `el`'in İLK ÇOCUĞU, sayı
+  // DOM'da SONRA eklendiği için hep üstte kalır — "sayılar hariç"
+  // hâlâ garanti. `Element.animate()` (CSS transition değil) kullanılıyor
+  // — Oturum 76'da bulunan "tarayıcı transition'ı atlayabiliyor" sorunu
+  // burada YOK, çünkü animate() senkron tetiklenme belirsizliğinden etkilenmez.
+  function _cellReflectionWave(el, opts = {}) {
     if (!el) return;
-    // [Oturum 76 — kullanıcı bulgusu: "belli olmuyor"] GERÇEK HATA:
-    // `transition` özelliğini ayarlayıp AYNI JS turunda `background`
-    // değerini değiştirmek, tarayıcıda genelde ÇALIŞIR ama garanti
-    // DEĞİL — bazı durumlarda tarayıcı iki değişikliği TEK BOYAMADA
-    // birleştirip geçiş animasyonunu HİÇ OYNATMADAN atlıyor (aynı
-    // sorunu fx/juice.js'teki shimmer'da da yaşamıştık, orada
-    // `void cell.offsetWidth` ile zorla reflow yapılıp düzeltilmişti —
-    // burada o adım UNUTULMUŞTU). Ayrıca renk de yeterince "açık"
-    // değildi (#4C5690 hâlâ oldukça koyu bir mor) — artık gerçekten
-    // AÇIK bir tona (#E8E2D8, ana arayüzün "açık bej" rengi) gidiyor.
-    const prevBg = el.style.background;
-    const prevTransition = el.style.transition;
-    el.style.transition = "none";
-    el.style.background = prevBg || getComputedStyle(el).backgroundImage; // mevcut koyu hâli sabitle
-    void el.offsetWidth; // ZORLA REFLOW — transition'ın gerçekten tetiklenmesini garantiler
-    el.style.transition = "background 0.32s ease-out";
-    el.style.background = "linear-gradient(145deg, #E8E2D8 0%, #C9C2B4 100%)"; // gerçekten AÇIK ton
-    setTimeout(() => {
-      el.style.background = prevBg || "";
-      setTimeout(() => { el.style.transition = prevTransition || ""; }, 340);
-    }, 260);
+    const intensity = opts.intensity ?? 1;   // 1 = merkez (tam güç), 0'a yaklaştıkça soluklaşır
+    const duration  = opts.duration  ?? 650; // yumuşak/uzun — su dalgası gibi ağır ağır
+
+    // 1) Yumuşak ışık katmanı — koyu arka planı AYDINLATIYOR (screen
+    //    blend), opak bir renk DEĞİŞİMİ değil, bu yüzden yoğunluk
+    //    (intensity) doğal olarak "ne kadar aydınlık" ile orantılı.
+    const glow = document.createElement("div");
+    glow.style.cssText =
+      "position:absolute;inset:0;pointer-events:none;z-index:0;border-radius:inherit;mix-blend-mode:screen;" +
+      `background:radial-gradient(circle, rgba(232,226,216,${(0.6*intensity).toFixed(2)}) 0%, rgba(232,226,216,${(0.22*intensity).toFixed(2)}) 55%, transparent 100%);`;
+    el.insertBefore(glow, el.firstChild);
+    if (glow.animate) {
+      glow.animate([
+        { opacity: 0 },
+        { opacity: 1, offset: 0.30 },
+        { opacity: 0.85, offset: 0.55 },
+        { opacity: 0 },
+      ], { duration, easing: "ease-in-out" })
+        .addEventListener("finish", () => glow.remove());
+    } else {
+      setTimeout(() => glow.remove(), duration);
+    }
 
     // 2) Ayna yansıması bandı — çapraz kayan parlak gradyan, sayının
-    //    ARKASINDA (ilk child olarak eklendiği için doğal DOM sırasıyla
-    //    sonradan eklenen sayı her zaman üstte kalır). Arka plan
-    //    geçişiyle (260ms açık + fade) SÜRESİ EŞLEŞTİRİLDİ.
+    //    ARKASINDA. Yoğunluk (intensity) ile orantılı soluklaşıyor,
+    //    süre de merkeze göre biraz daha yavaş — dalga dışarı doğru
+    //    yavaşlayarak yayılıyor hissi.
     const sweep = document.createElement("div");
     sweep.style.cssText =
       "position:absolute;inset:0;pointer-events:none;z-index:0;border-radius:inherit;overflow:hidden;" +
-      "background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.65) 46%, rgba(255,255,255,0.98) 50%, rgba(255,255,255,0.65) 54%, transparent 75%);" +
+      `background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,${(0.4*intensity).toFixed(2)}) 46%, rgba(255,255,255,${(0.62*intensity).toFixed(2)}) 50%, rgba(255,255,255,${(0.4*intensity).toFixed(2)}) 54%, transparent 75%);` +
       "transform:translateX(-140%);";
     el.insertBefore(sweep, el.firstChild);
+    const sweepDuration = duration * 0.85;
     if (sweep.animate) {
       sweep.animate([
         { transform: "translateX(-140%)" },
         { transform: "translateX(140%)" },
-      ], { duration: 520, easing: "ease-in-out" })
+      ], { duration: sweepDuration, easing: "ease-in-out" })
         .addEventListener("finish", () => sweep.remove());
     } else {
-      setTimeout(() => sweep.remove(), 520);
+      setTimeout(() => sweep.remove(), sweepDuration);
     }
   }
 
@@ -231,23 +235,25 @@ const F9GameFeel = (() => {
     requestAnimationFrame(() => {
       const el = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
       if (!el) return;
-      _cellReflectionWave(el);
+      _cellReflectionWave(el, { intensity: 1, duration: 650 });
       el.animate?.([
         { transform: "scale(1)" },
         { transform: "scale(1.16)" },
         { transform: "scale(1)" },
       ], { duration: 220, easing: "ease-out" });
       // Etraftaki hücreler de aynı yansıma dalgasını, merkeze olan
-      // mesafeye göre kademeli gecikmeyle alıyor — ışık dışarı yayılıyor.
+      // mesafeye göre kademeli gecikmeyle ve AZALAN GÜÇLE alıyor — su
+      // dalgası gibi dışarı doğru yayılıp yumuşayarak zayıflıyor.
       _illuminateNeighbors(r, c);
     });
   }
 
   // Merkez hücrenin etrafındaki hücreleri, merkeze olan mesafeye göre
-  // KADEMELİ GECİKMEYLE aynı yansıma dalgasıyla aydınlatır. DİKKAT: `el`
-  // referansları HER GECİKMEDE YENİDEN sorgulanıyor (setTimeout içinde,
-  // önceden değil) — render() bu sırada tekrar çalışırsa (nadiren) yine
-  // güncel DOM'u bulsun diye.
+  // KADEMELİ GECİKMEYLE VE AZALAN YOĞUNLUKLA aynı yansıma dalgasıyla
+  // aydınlatır — "suya atılan taşın dalgası gibi, daha yumuşak" (Oturum
+  // 78). DİKKAT: `el` referansları HER GECİKMEDE YENİDEN sorgulanıyor
+  // (setTimeout içinde, önceden değil) — render() bu sırada tekrar
+  // çalışırsa (nadiren) yine güncel DOM'u bulsun diye.
   function _illuminateNeighbors(r, c, radius = 2) {
     for (let dr = -radius; dr <= radius; dr++) {
       for (let dc = -radius; dc <= radius; dc++) {
@@ -255,10 +261,12 @@ const F9GameFeel = (() => {
         const dist = Math.hypot(dr, dc);
         if (dist > radius + 0.1) continue; // köşeleri ele, daire şeklinde yayılsın
         const nr = r + dr, nc = c + dc;
-        const delay = Math.round(dist * 55); // ışık dışarı doğru yayılıyor gibi kademeli gecikme
+        const delay = Math.round(dist * 85); // [Oturum 78] su dalgası hissi için yavaşlatıldı (55->85ms/birim) — dalganın yayılması artık göz gözle takip edilebilir
+        const intensity = Math.max(0.25, 1 - (dist / (radius + 0.6)) * 0.75); // merkeze yakın güçlü, uzak SOLUK (ama tamamen kaybolmuyor)
+        const duration = 650 + dist * 60; // dalga dışarı doğru biraz YAVAŞLAYARAK sönüyor
         setTimeout(() => {
           const nel = document.querySelector(`[data-r="${nr}"][data-c="${nc}"]`);
-          if (nel) _cellReflectionWave(nel);
+          if (nel) _cellReflectionWave(nel, { intensity, duration });
         }, delay);
       }
     }
