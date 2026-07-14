@@ -242,7 +242,18 @@ function executeMove(r1, c1, r2, c2, resultValue) {
     // [Oturum 52 — Event Bus] Promotion — mevcut ses çağrısı aynen duruyor.
     if (typeof F9Events !== "undefined") F9Events.emit("Promotion", { to: outcome.gift, r: r2, c: c2 });
   }
-  else playSound('match');
+  else {
+    playSound('match');
+    // [Oturum 70 — kullanıcı bulgusu: "eşleşen 2 sayı için efekt yok"]
+    // BU, oyundaki EN SIK dal — çoğu hamle bir eşleşme TAMAMLAMIYOR,
+    // sadece iki sayıyı birleştiriyor. Önceden bu dalda SADECE SES
+    // vardı, hiç görsel yoktu — "efektler görünmüyor" şikayetinin asıl
+    // kök nedeni muhtemelen buydu (match kutlaması sadece NADİR olan
+    // eşleşme anında tetikleniyordu, en sık hareket olan düz birleştirme
+    // hiç kutlanmıyordu). Artık her düz birleştirmede de hafif bir
+    // parçacık+pop var (bkz. fx/game-feel.js celebrateMerge).
+    if (typeof F9Events !== "undefined") F9Events.emit("PlainMerge", { r: r2, c: c2, value: resultValue });
+  }
 
   // Hedef takibi güncelle
   const _goal = state.levelGoal;

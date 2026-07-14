@@ -29,6 +29,8 @@ const F9GameFeel = (() => {
     F9Events.on("ComboIncreased", (data) => { onChainMatch(data.match); });
     F9Events.on("LevelCompleted", () => { celebrateVictory(); });
     F9Events.on("LevelFailed", () => { acknowledgeLoss(); });
+    // [Oturum 70 — kullanıcı bulgusu: "eşleşen 2 sayı için efekt yok"]
+    F9Events.on("PlainMerge", (data) => { celebrateMerge(data.r, data.c); });
   }
 
   function resetCombo() { _comboCount = 0; }
@@ -137,5 +139,32 @@ const F9GameFeel = (() => {
     if (typeof playSound === "function") playSound("lose");
   }
 
-  return { init, resetCombo, celebrateBlast, onChainMatch, celebrateVictory, acknowledgeLoss };
+  // [Oturum 70 — kullanıcı bulgusu: "eşleşen 2 sayı için efekt yok"]
+  // Oyundaki EN SIK olay — her düz birleştirmede (eşleşme olmasa bile)
+  // hafif bir kutlama. Match kutlamasından (celebrateBlast) BİLEREK
+  // daha SOLUK/küçük — sürekli, her hamlede tetiklenecek, göz
+  // yormamalı, ama "hiçbir şey olmuyor" hissini kırmalı.
+  function celebrateMerge(r, c) {
+    if (r == null || c == null) return;
+    // Küçük, nazik bir parçacık serpintisi — patlama değil.
+    if (typeof F9Particles !== "undefined") {
+      const pos = F9Particles.cellCenter(r, c);
+      if (pos) {
+        F9Particles.burst(pos.x, pos.y, {
+          count: 8, color: ["#FFFFFF", "#D8D2C8"], speed: 1.3, life: 320, gravity: 0.08, size: [1.5, 3],
+        });
+      }
+    }
+    // Sonuç hücresinde kısa bir "pop" — büyüyüp normale dönme.
+    const el = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+    if (el) {
+      el.animate?.([
+        { transform: "scale(1)" },
+        { transform: "scale(1.16)" },
+        { transform: "scale(1)" },
+      ], { duration: 220, easing: "ease-out" });
+    }
+  }
+
+  return { init, resetCombo, celebrateBlast, onChainMatch, celebrateVictory, acknowledgeLoss, celebrateMerge };
 })();
