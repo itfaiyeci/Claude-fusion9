@@ -184,6 +184,16 @@ const F9GameFeel = (() => {
         { transform: "scale(1)" },
       ], { duration: 220, easing: "ease-out" });
     }
+    // [Oturum 73 — kullanıcı isteği: "matrix efektinin TAMAMINI uygula,
+    // beyazlama+dalgalanma dahil"] Dalgalanma — F9Anim.shockwave()
+    // (fx/blast-fx.js, zaten var, eşleşmelerde kullanılıyordu) merkezden
+    // dışarı yayılan bir halka çiziyor. Artık "Matrix efekti" TAM paket:
+    // 4x4 grid parçacık (Oturum 71) + beyaz parlama (Oturum 72) +
+    // dalgalanma halkası (bu satır) — üçü birlikte, her düz
+    // birleştirmede.
+    if (typeof F9Anim !== "undefined" && typeof F9Anim.shockwave === "function") {
+      F9Anim.shockwave(r, c, "#FFFFFF66");
+    }
   }
 
   return { init, resetCombo, celebrateBlast, onChainMatch, celebrateVictory, acknowledgeLoss, celebrateMerge };
