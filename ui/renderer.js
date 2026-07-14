@@ -1,6 +1,36 @@
 // [Oturum 16 — ui/ katmanı] Ana render/tahta motoru.
 // core/game-engine.js'ten taşındı — davranış BİREBİR AYNI.
 
+// [Oturum 79 — "sayıları balon gibi gösterelim"] Bir hex rengi
+// açıklaştırır (percent>0) ya da koyulaştırır (percent<0) — balonun
+// 3D gradyanı (parlak üst / koyu alt) ve düğümü için kullanılıyor.
+// Yeni görsel dosyası gerektirmez, tamamen hesaplanıyor.
+function _shadeHex(hex, percent) {
+  const num = parseInt(hex.replace("#", ""), 16);
+  let r = (num >> 16) & 0xFF, g = (num >> 8) & 0xFF, b = num & 0xFF;
+  const amt = Math.round(2.55 * percent);
+  r = Math.max(0, Math.min(255, r + amt));
+  g = Math.max(0, Math.min(255, g + amt));
+  b = Math.max(0, Math.min(255, b + amt));
+  return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, "0");
+}
+
+// Bir sayı için "balon" HTML'i — kendi renginde parlak, 3D bir balon
+// şekli (radial-gradient + parıltı lekesi + alt düğüm, hepsi CSS).
+function _balloonHtml(value, baseColor) {
+  const light = _shadeHex(baseColor, 32);
+  const dark = _shadeHex(baseColor, -28);
+  return `<div class="f9-balloon" style="--balloon-light:${light};--balloon-base:${baseColor};--balloon-dark:${dark}"><span class="f9-balloon-number">${value}</span></div>`;
+}
+
+// Sabit boyutlu bir kapta küçük balon ikonu — popup menüdeki sayı
+// simgeleri için (balon yüzdeleri bir üst container'a göre olduğundan
+// sabit boyutlu bir sarmalayıcı gerekiyor).
+function _balloonIconHtml(value, size, baseColor) {
+  const color = baseColor || (value === 9 ? "#E0B23C" : (NUMBER_COLOR[value] || "#E8E2D8"));
+  return `<span style="display:inline-block;width:${size}px;height:${size}px;vertical-align:middle">${_balloonHtml(value, color)}</span>`;
+}
+
 function cellDisplay(r, c) {
   const gc = state.gc;
   const k = cellKey(r, c);
@@ -208,13 +238,21 @@ function renderBoardOnly() {
         } else if (disp.value !== null) {
           numColor = NUMBER_COLOR[disp.value] || "#F2EBE0";
         }
+        // [Oturum 79 — kullanıcı isteği: "sayıların görseline dokunalım,
+        // sayıları balon gibi gösterelim"] Eskiden sayılar ya hazır bir
+        // raster görsel (GIFT_ASSETS num_X, fx/assets.js'te gömülü PNG)
+        // ya da düz renkli metin olarak gösteriliyordu. Artık HER SAYI
+        // kendi renginde (NUMBER_COLOR, 9 için altın #E0B23C) parlak,
+        // 3D bir "balon" — CSS ile çiziliyor (yeni bir görsel dosyasına
+        // gerek yok): radial-gradient (üstte parlak, altta koyu — ışık
+        // kaynağı hissi) + ayrı bir "parıltı" lekesi (::before) + küçük
+        // bir "düğüm" (::after, alt uçta üçgen). Sayı balonun üstünde,
+        // beyaz + koyu gölgeli, her renkte okunur kalsın diye.
         if (disp.value === null) {
           inner = "";
         } else {
-          const _nk = "num_" + disp.value;
-          inner = GIFT_ASSETS[_nk]
-            ? `<img src="${GIFT_ASSETS[_nk]}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:4px;">`
-            : `<span style="color:${numColor};font-size:clamp(22px,7vw,42px);font-weight:900">${disp.value}</span>`;
+          const baseColor = disp.value === 9 ? "#E0B23C" : (NUMBER_COLOR[disp.value] || "#F2EBE0");
+          inner = _balloonHtml(disp.value, baseColor);
         }
       } else if (disp.type === "hourglass") {
         cls += disp.warn ? " f9-cell-hourglass-warn" : " f9-cell-hourglass";
@@ -445,13 +483,10 @@ function renderOptionsArea() {
   // left = col*CELL + CELL/2 (hücre ortası) ama piksel clamp sonrası
   const openBelow = row < GRID / 2;
 
-  // Sayı simgesi HTML yardımcısı
+  // Sayı simgesi HTML yardımcısı — [Oturum 79] artık balon
   function numImg(val) {
     if (!val) return "";
-    const src = GIFT_ASSETS && GIFT_ASSETS["num_" + val];
-    if (src) return `<img src="${src}" style="width:32px;height:32px;object-fit:contain;vertical-align:middle;border-radius:4px">`;
-    const color = NUMBER_COLOR[val] || "#E8E2D8";
-    return `<span style="font-size:28px;font-weight:900;color:${color};line-height:1">${val}</span>`;
+    return _balloonIconHtml(val, 32);
   }
 
   // Başlık — iki hücrenin değerleri + simgeler
@@ -463,13 +498,10 @@ function renderOptionsArea() {
       <span class="f9-opts-title-label">İşlem seç</span>
     </div>`;
 
-  // İşlem butonları — simgeli sonuç
+  // İşlem butonları — simgeli sonuç [Oturum 79] artık balon
   const btnsHtml = ops.map((o, i) => {
     const color = o.value === 9 ? "#E0B23C" : (NUMBER_COLOR[o.value] || "#E8E2D8");
-    const src   = GIFT_ASSETS && GIFT_ASSETS["num_" + o.value];
-    const resultHtml = src
-      ? `<img src="${src}" style="width:36px;height:36px;object-fit:contain;border-radius:4px" alt="${o.value}">`
-      : `<span style="font-size:28px;font-weight:900;color:${color};line-height:1">${o.value}</span>`;
+    const resultHtml = _balloonIconHtml(o.value, 36, color);
     return `<button class="f9-op-btn2${o.value===9?" f9-op-btn2-nine":""}" data-idx="${i}">
       <span class="f9-op-sym2">${o.op}</span>
       <span class="f9-op-res2">${resultHtml}</span>

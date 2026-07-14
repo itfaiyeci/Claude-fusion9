@@ -703,6 +703,38 @@ body { margin:0; background: #0B0D1A; /*base64-bg:/9j/4AAQSkZJRgABAQAAAQABAAD/2w
   will-change: background-color, box-shadow, transform; /* GPU katmanı — animasyon akıcılığı */
 }
 .f9-cell:hover { background: linear-gradient(145deg,#222848,#1A2038); }
+/* [Oturum 79 — kullanıcı isteği: "sayıları balon gibi gösterelim"]
+   CSS ile çizilen 3D balon — yeni görsel dosyası GEREKMİYOR. Işık
+   kaynağı üst-sol köşede (radial-gradient), koyu gölge alt-sağda,
+   ayrı bir parıltı lekesi (::before) ve alt uçta küçük bir düğüm
+   (::after, üçgen clip-path). Renk her sayı için değişken olarak
+   (--balloon-light/base/dark) satır içi stille geliyor. */
+.f9-balloon {
+  position: relative;
+  width: 76%; height: 84%; margin: 0 auto;
+  border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%;
+  background: radial-gradient(circle at 32% 26%, var(--balloon-light) 0%, var(--balloon-base) 55%, var(--balloon-dark) 100%);
+  box-shadow: inset -5px -7px 10px rgba(0,0,0,0.28), inset 3px 4px 6px rgba(255,255,255,0.15), 0 3px 6px rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+}
+.f9-balloon::before {
+  content: ""; position: absolute; top: 13%; left: 18%;
+  width: 28%; height: 36%; border-radius: 50%;
+  background: rgba(255,255,255,0.55); filter: blur(1.2px);
+  transform: rotate(-25deg); pointer-events: none;
+}
+.f9-balloon::after {
+  content: ""; position: absolute; bottom: 1%; left: 50%;
+  width: 11%; height: 9%; background: var(--balloon-dark);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  transform: translateX(-50%); pointer-events: none;
+}
+.f9-balloon-number {
+  position: relative; z-index: 1; color: #FFFFFF; font-weight: 900;
+  font-size: clamp(18px, 6.2vw, 36px);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.55), 0 0 4px rgba(0,0,0,0.25);
+  font-variant-numeric: tabular-nums;
+}
 .f9-cell-nine { color: var(--f9-accent); font-weight:600; box-shadow: inset 0 0 0 1px rgba(224,178,60,0.35); animation: f9-pulse 1.8s ease-in-out infinite; }
 @keyframes f9-pulse { 0%,100% { box-shadow: inset 0 0 0 1px rgba(224,178,60,0.25); } 50% { box-shadow: inset 0 0 0 1px rgba(224,178,60,0.65); } }
 /* ── KUM SAATİ HÜCRESİ ── */

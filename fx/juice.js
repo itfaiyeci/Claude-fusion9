@@ -106,31 +106,22 @@ const F9Juice = (() => {
       const c = parseInt(el.getAttribute("data-c") || "0", 10);
       el.style.setProperty("--breathe-delay", ((r * 8 + c) % 16) * 130 + "ms");
       el.classList.add("f9-cell-breathe");
-      // [Oturum 59 — kullanıcı düzeltmesi: "kare dönüyor hala, dönme
-      // YOK, sadece nefes alan sayılar"] Dönme tamamen kaldırıldı,
-      // statik cam parlaması kaldı. isSpecial kontrolü sayesinde
-      // SADECE normal sayı hücrelerine (1-8) uygulanıyor.
-      _applyHoloNumber(el);
+      // [Oturum 79 — "sayıları balon gibi gösterelim"] _applyHoloNumber()
+      // ÇAĞRISI KALDIRILDI. O fonksiyon doğrudan <span>/<img> çocuğunu
+      // hedefliyordu (Oturum 59) — artık sayılar `<div class="f9-balloon">`
+      // içinde, bu yüzden hiçbir şey bulamıyordu (sessizce no-op). Ayrıca
+      // balon zaten KENDİ parlaklığını sağlıyor (radial-gradient +
+      // ::before parıltı lekesi) — eski düz "cam parlaması" efekti
+      // eklenseydi bile balonun kendi ::before'uyla ÇAKIŞIRDI (aynı
+      // pseudo-element, ikisi birden olamaz). Nefes alma (breathe)
+      // hâlâ aktif, balonun görsel zenginliği yeterli.
     });
   }
 
-  // [Oturum 59 — kullanıcı isteği: "sadece sayılar, nefes alan
-  // sayılar, dönme YOK", küp/kutu YOK] Sayı hücresindeki mevcut <span>
-  // veya <img> öğesine DOĞRUDAN bir sınıf ekler — hiçbir yeni
-  // element/kutu/kenarlık YARATMAZ, ui/renderer.js'in ürettiği
-  // görsel/metin AYNEN yerinde kalır. <span> için ::before ile statik
-  // cam parlaması (metin pseudo-element'i olduğu için çalışır); <img>
-  // "replaced element" olduğundan ::before render ETMEZ — bu yüzden
-  // <img>'e ayrı, sadece filter tabanlı statik bir parlama sınıfı
-  // uygulanıyor. İkisi de ANİMASYONSUZ — tek hareket kaynağı nefes
-  // alma (.f9-cell-breathe, üst .f9-cell'de).
-  function _applyHoloNumber(el) {
-    const img = el.querySelector(":scope > img");
-    if (img) { img.classList.add("f9-num-holo-img"); return; }
-    const plainSpan = el.querySelector(":scope > span");
-    if (!plainSpan) return; // boş hücre (null değer) — uygulanacak bir şey yok
-    plainSpan.classList.add("f9-num-holo");
-  }
+  // [Oturum 79 — "sayıları balon gibi gösterelim"] _applyHoloNumber()
+  // fonksiyonu KALDIRILDI (Oturum 59'da eklenmişti, span/img yapısını
+  // hedefliyordu). Balon (ui/renderer.js _balloonHtml) kendi parlaklığını
+  // sağladığı için artık gerekmiyor.
 
   // [YENİ] Periyodik, hover'dan BAĞIMSIZ parlama — rastgele aralıklarla
   // rastgele bir hücre kısa süreliğine parlıyor. Taşlar "canlı"
