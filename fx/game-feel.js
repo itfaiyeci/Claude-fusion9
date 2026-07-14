@@ -194,6 +194,43 @@ const F9GameFeel = (() => {
     if (typeof F9Anim !== "undefined" && typeof F9Anim.shockwave === "function") {
       F9Anim.shockwave(r, c, "#FFFFFF66");
     }
+    // [Oturum 74 — kullanıcı isteği: "dalgalanma ile birlikte etrafındaki
+    // hücreler de beyaz aydınlansın, merkezden dağılan ışık/deniz feneri
+    // gibi"] Dalgalanma artık sadece dekoratif bir halka DEĞİL — gerçekten
+    // etraftaki hücreleri de tek tek aydınlatıyor, merkeze olan MESAFEYE
+    // göre gecikmeli (yakın hücre önce, uzak hücre sonra) — ışığın
+    // gerçekten dışarı doğru yayıldığı hissi.
+    _illuminateNeighbors(r, c);
+  }
+
+  // Merkez hücrenin etrafındaki hücreleri, merkeze olan mesafeye göre
+  // KADEMELİ GECİKMEYLE aydınlatır — "ışık merkezden dışarı yayılıyor"
+  // hissi. radius=2: yaklaşık 12 hücreyi kapsayan bir daire (köşe
+  // hücreler dahil değil, tam kare değil — yuvarlak bir yayılım).
+  function _illuminateNeighbors(r, c, radius = 2) {
+    for (let dr = -radius; dr <= radius; dr++) {
+      for (let dc = -radius; dc <= radius; dc++) {
+        if (dr === 0 && dc === 0) continue; // merkez zaten kendi parlamasını aldı (celebrateMerge yukarısı)
+        const dist = Math.hypot(dr, dc);
+        if (dist > radius + 0.1) continue; // köşeleri ele, daire şeklinde yayılsın
+        const nr = r + dr, nc = c + dc;
+        const el = document.querySelector(`[data-r="${nr}"][data-c="${nc}"]`);
+        if (!el) continue; // tahta dışı veya hücre yok
+        const delay = Math.round(dist * 55); // ışık dışarı doğru yayılıyor gibi kademeli gecikme
+        setTimeout(() => {
+          const prevTransition = el.style.transition;
+          el.style.transition = "none";
+          el.style.boxShadow = "0 0 7px #FFFFFF77";
+          el.style.filter = "brightness(1.22)";
+          setTimeout(() => {
+            el.style.transition = "box-shadow 0.25s ease-out, filter 0.25s ease-out";
+            el.style.boxShadow = "";
+            el.style.filter = "";
+            setTimeout(() => { el.style.transition = prevTransition || ""; }, 260);
+          }, 70);
+        }, delay);
+      }
+    }
   }
 
   return { init, resetCombo, celebrateBlast, onChainMatch, celebrateVictory, acknowledgeLoss, celebrateMerge };
