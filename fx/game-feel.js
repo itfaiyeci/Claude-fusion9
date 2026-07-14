@@ -139,16 +139,52 @@ const F9GameFeel = (() => {
     if (typeof playSound === "function") playSound("lose");
   }
 
-  // [Oturum 70 — kullanıcı bulgusu: "eşleşen 2 sayı için efekt yok"]
-  // Oyundaki EN SIK olay — her düz birleştirmede (eşleşme olmasa bile)
-  // hafif bir kutlama. Match kutlamasından (celebrateBlast) BİLEREK
-  // daha SOLUK/küçük — sürekli, her hamlede tetiklenecek, göz
-  // yormamalı, ama "hiçbir şey olmuyor" hissini kırmalı.
+  // [Oturum 75 — kullanıcı isteği, netleştirilmiş (5. deneme): "hücrelerin
+  // renklerini koyu renkten açık renk yapacaksın, sayılar hariç. Karelerin
+  // içinden ayna yansıması dalgası olacak."]
+  // ÖNCEKİ HATA: filter:brightness(...) kullanıyordum — CSS filter,
+  // elementin İÇİNDEKİ HER ŞEYİ (sayı dahil) birlikte etkiler, bu yüzden
+  // "sayılar hariç" isteği karşılanamıyordu. DÜZELTME: artık SADECE
+  // hücrenin `background` özelliği değişiyor (koyu->açık geçiş, sayıyı
+  // hiç etkilemez — background her zaman sayının ARKASINDA) + ayrı bir
+  // "yansıma bandı" (çapraz, parlak bir gradyan) hücrenin İLK ÇOCUĞU
+  // olarak eklenip kayıyor — sayı z-index/DOM sırası gereği HEP ÜSTTE
+  // kalıyor, bant sayının ARKASINDAN geçiyor (tam "ayna yansıması" hissi).
+  function _cellReflectionWave(el) {
+    if (!el) return;
+    // 1) Arkaplan: koyudan açığa kısa bir geçiş.
+    const prevBg = el.style.background;
+    const prevTransition = el.style.transition;
+    el.style.transition = "background 0.30s ease-out";
+    el.style.background = "linear-gradient(145deg, #4C5690 0%, #3B4478 100%)"; // açık ton (mevcut koyu #1A1E35/#141728'in açığı)
+    setTimeout(() => {
+      el.style.background = prevBg || "";
+      setTimeout(() => { el.style.transition = prevTransition || ""; }, 320);
+    }, 190);
+
+    // 2) Ayna yansıması bandı — çapraz kayan parlak gradyan, sayının
+    //    ARKASINDA (ilk child olarak eklendiği için doğal DOM sırasıyla
+    //    sonradan eklenen sayı her zaman üstte kalır).
+    const sweep = document.createElement("div");
+    sweep.style.cssText =
+      "position:absolute;inset:0;pointer-events:none;z-index:0;border-radius:inherit;overflow:hidden;" +
+      "background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.5) 47%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.5) 53%, transparent 70%);" +
+      "transform:translateX(-140%);";
+    el.insertBefore(sweep, el.firstChild);
+    if (sweep.animate) {
+      sweep.animate([
+        { transform: "translateX(-140%)" },
+        { transform: "translateX(140%)" },
+      ], { duration: 430, easing: "ease-in-out" })
+        .addEventListener("finish", () => sweep.remove());
+    } else {
+      setTimeout(() => sweep.remove(), 430);
+    }
+  }
+
   function celebrateMerge(r, c) {
     if (r == null || c == null) return;
-    // [Oturum 71 — kullanıcı isteği: "şaşırtıcı değil, matris efekti
-    // 4x4 olabilir"] Rastgele daire yerine düzenli 4x4 kare grid
-    // patlaması — daha ayırt edici, sayı temasına daha uygun.
+    // [Oturum 71] 4x4 grid parçacık patlaması.
     if (typeof F9Particles !== "undefined") {
       const pos = F9Particles.cellCenter(r, c);
       if (pos) {
@@ -157,78 +193,38 @@ const F9GameFeel = (() => {
         });
       }
     }
-    // [Oturum 72 — kullanıcı bulgusu: "efekt oluyor ama beyazlamıyor"]
-    // Eşleşen hücreler zaten flow/rewardFlow.js'te bir "anlık parla"
-    // efekti alıyordu (arka plan beyaza dönüp box-shadow ile parlıyor,
-    // bkz. "Eski JS flash") — ama bu SADECE gerçek eşleşme olduğunda
-    // çalışıyordu. Düz birleştirmede (bu fonksiyon) hücrenin kendisi
-    // HİÇ parlamıyordu, sadece küçük parçacıklar vardı. Artık AYNI
-    // desen (kısa süreli beyaz parlama + hafif büyüme) düz
-    // birleştirmede de var — match'teki kadar güçlü değil (daha kısa
-    // süre, daha az glow) ki ikisi ayırt edilebilir kalsın.
+    // [Oturum 75] Merkez hücrede ayna yansıması dalgası + arkaplan geçişi.
     const el = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+    _cellReflectionWave(el);
     if (el) {
-      const prevTransition = el.style.transition;
-      el.style.transition = "none";
-      el.style.boxShadow = "0 0 10px #FFFFFFAA, inset 0 0 6px #FFFFFF88";
-      el.style.filter = "brightness(1.5)";
-      setTimeout(() => {
-        el.style.transition = "box-shadow 0.28s ease-out, filter 0.28s ease-out";
-        el.style.boxShadow = "";
-        el.style.filter = "";
-        setTimeout(() => { el.style.transition = prevTransition || ""; }, 300);
-      }, 90);
       el.animate?.([
         { transform: "scale(1)" },
         { transform: "scale(1.16)" },
         { transform: "scale(1)" },
       ], { duration: 220, easing: "ease-out" });
     }
-    // [Oturum 73 — kullanıcı isteği: "matrix efektinin TAMAMINI uygula,
-    // beyazlama+dalgalanma dahil"] Dalgalanma — F9Anim.shockwave()
-    // (fx/blast-fx.js, zaten var, eşleşmelerde kullanılıyordu) merkezden
-    // dışarı yayılan bir halka çiziyor. Artık "Matrix efekti" TAM paket:
-    // 4x4 grid parçacık (Oturum 71) + beyaz parlama (Oturum 72) +
-    // dalgalanma halkası (bu satır) — üçü birlikte, her düz
-    // birleştirmede.
+    // [Oturum 73] Dalgalanma halkası (dekoratif, F9Anim'de zaten vardı).
     if (typeof F9Anim !== "undefined" && typeof F9Anim.shockwave === "function") {
       F9Anim.shockwave(r, c, "#FFFFFF66");
     }
-    // [Oturum 74 — kullanıcı isteği: "dalgalanma ile birlikte etrafındaki
-    // hücreler de beyaz aydınlansın, merkezden dağılan ışık/deniz feneri
-    // gibi"] Dalgalanma artık sadece dekoratif bir halka DEĞİL — gerçekten
-    // etraftaki hücreleri de tek tek aydınlatıyor, merkeze olan MESAFEYE
-    // göre gecikmeli (yakın hücre önce, uzak hücre sonra) — ışığın
-    // gerçekten dışarı doğru yayıldığı hissi.
+    // [Oturum 74→75] Etraftaki hücreler de aynı yansıma dalgasını, merkeze
+    // olan mesafeye göre kademeli gecikmeyle alıyor — ışık dışarı yayılıyor.
     _illuminateNeighbors(r, c);
   }
 
   // Merkez hücrenin etrafındaki hücreleri, merkeze olan mesafeye göre
-  // KADEMELİ GECİKMEYLE aydınlatır — "ışık merkezden dışarı yayılıyor"
-  // hissi. radius=2: yaklaşık 12 hücreyi kapsayan bir daire (köşe
-  // hücreler dahil değil, tam kare değil — yuvarlak bir yayılım).
+  // KADEMELİ GECİKMEYLE aynı yansıma dalgasıyla aydınlatır.
   function _illuminateNeighbors(r, c, radius = 2) {
     for (let dr = -radius; dr <= radius; dr++) {
       for (let dc = -radius; dc <= radius; dc++) {
-        if (dr === 0 && dc === 0) continue; // merkez zaten kendi parlamasını aldı (celebrateMerge yukarısı)
+        if (dr === 0 && dc === 0) continue; // merkez zaten kendi dalgasını aldı
         const dist = Math.hypot(dr, dc);
         if (dist > radius + 0.1) continue; // köşeleri ele, daire şeklinde yayılsın
         const nr = r + dr, nc = c + dc;
         const el = document.querySelector(`[data-r="${nr}"][data-c="${nc}"]`);
-        if (!el) continue; // tahta dışı veya hücre yok
+        if (!el) continue;
         const delay = Math.round(dist * 55); // ışık dışarı doğru yayılıyor gibi kademeli gecikme
-        setTimeout(() => {
-          const prevTransition = el.style.transition;
-          el.style.transition = "none";
-          el.style.boxShadow = "0 0 7px #FFFFFF77";
-          el.style.filter = "brightness(1.22)";
-          setTimeout(() => {
-            el.style.transition = "box-shadow 0.25s ease-out, filter 0.25s ease-out";
-            el.style.boxShadow = "";
-            el.style.filter = "";
-            setTimeout(() => { el.style.transition = prevTransition || ""; }, 260);
-          }, 70);
-        }, delay);
+        setTimeout(() => _cellReflectionWave(el), delay);
       }
     }
   }
