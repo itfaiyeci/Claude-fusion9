@@ -150,6 +150,23 @@ ağacına dönüştürüldü.
 
 ## Bilinen açık sorular (kod değil, ürün/tasarım kararları bekliyor)
 
+0. **⚠️ DİKKAT (Oturum 67) — `debug/bot.js`'in "casual"/"normal" profilleri
+   GERÇEK bir oyuncuyu TEMSİL ETMİYOR OLABİLİR, zorluk dengesi
+   kararlarında TEK BAŞINA GÜVENME.** Level 1-20 için `casual` profille
+   ölçülen kazanma oranı çoğu level'da %0-10 (bkz. "Ölçülmüş veri"),
+   `normal` profil de benzer (%0-23). Kullanıcı KENDİSİ oynayınca "hiç
+   zorlanmadım" dedi ve "16 hamlede 1000 puanın üzerine çıkıyorum" dedi
+   — bu, botun ölçtüğü ~200-300 ortalama skorun ÇOK ÜZERİNDE. Yani bot
+   (basit tercih ağırlıklarıyla oynayan, gerçek stratejik planlama
+   yapmayan bir sezgisel) muhtemelen gerçek bir insan oyuncudan ÇOK
+   daha zayıf oynuyor — düşük win-rate ölçümleri GERÇEK zorluğu değil,
+   BOTUN ZAYIFLIĞINI yansıtıyor olabilir. **Karar:** zorluk eğrisine
+   (hedef skor/hamle sayısı) bu oturumda DOKUNULMADI — kullanıcının
+   gerçek deneyimi bot verisini geçersiz kıldı. İleride bot'un
+   `_pickMove`/`PROFILES` sezgisi daha güçlü bir plana (örn. çok adımlı
+   arama) yükseltilmeden, bot çıktısına dayanarak hedef skor/hamle
+   sayısı DEĞİŞTİRME — önce kullanıcının kendi oynayış deneyimini sor.
+
 1. **~~"Level 37'de HERKES aynı tahtayı görsün mü?"~~ → Oturum 43'te
    ÇÖZÜLDÜ: EVET.** Bkz. "En kritik kararlar" madde 15.
 2. **Near-miss popup'ı YENİDEN TASARLANDI VE DÜZELTİLDİ (Oturum 26).**
