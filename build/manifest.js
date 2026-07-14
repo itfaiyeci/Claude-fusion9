@@ -53,6 +53,7 @@ module.exports = [
   "fx/particles.js",
   "fx/combo.js",
   "fx/juice.js",
+  "fx/number-fx.js", // [Oturum 87] sayı-özel efektler — game-feel.js buna bağımlı, ondan ÖNCE
   "fx/game-feel.js", // diğer TÜM fx modüllerine bağımlı — en son
   "ui/screens.js",
   "ui/renderer.js",
