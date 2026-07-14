@@ -399,6 +399,26 @@ function attachBoardListener() {
   container.addEventListener("pointerup", _endDrag);
   container.addEventListener("pointercancel", _endDrag);
 
+  // [Oturum 66 — kullanıcı isteği: "vazgeç butonu kaldır, ekranda başka
+  // yere dokunduğunda iptal etmiş olsun"] Popup (state.pendingOptions)
+  // açıkken, panelin DIŞINA yapılan HERHANGİ bir dokunma onu iptal eder
+  // — hem tahtadaki başka bir hücreye hem ekranın tamamen boş bir
+  // yerine dokunmak dahil. CAPTURE aşamasında (document, true) dinliyor
+  // — böylece bu, container'ın kendi pointerdown dinleyicisinden ÖNCE
+  // çalışır: aynı dokunuşta önce menü iptal olur, SONRA (eğer dokunulan
+  // yer bir hücreyse) o hücre yeni bir ilk-seçim olarak işlenir — tek
+  // dokunuşta hem iptal hem yeni seçim, ekstra dokunmaya gerek kalmaz.
+  document.addEventListener("pointerdown", (e) => {
+    if (!state.pendingOptions) return;
+    const panel = document.getElementById("f9-opts-panel");
+    if (panel && panel.contains(e.target)) return; // panelin İÇİNE dokunuldu, iptal etme
+    state.pendingOptions = null;
+    renderOptionsArea();
+    // state.selected/neighbors BİLEREK temizlenmiyor — container'ın kendi
+    // pointerdown dinleyicisi (bu olaydan hemen sonra, bubble aşamasında)
+    // handleCellClick()'i normal şekilde çalıştıracak.
+  }, true);
+
   _boardListenerEl = container;
 }
 
@@ -462,7 +482,6 @@ function renderOptionsArea() {
     <div class="f9-opts-arrow2 ${openBelow?"f9-opts-arrow2-up":"f9-opts-arrow2-down"}" id="f9-opts-arrow"></div>
     ${titleHtml}
     <div class="f9-opts-row2">${btnsHtml}</div>
-    <button class="f9-cancel-btn" id="f9-cancel-move">Vazgeç</button>
   </div>`;
 
   F9Debug.log("ui", `Menü: (${r1},${c1})+(${r2},${c2}) ${ops.length} seçenek`);
@@ -528,14 +547,10 @@ function renderOptionsArea() {
     });
   });
 
-  document.getElementById("f9-cancel-move")?.addEventListener("click", e => {
-    e.stopPropagation();
-    state.pendingOptions = null;
-    state.selected       = null;
-    state.neighbors      = [];
-    renderBoardOnly();
-    renderOptionsArea();
-  });
+  // [Oturum 66 — kullanıcı isteği: "vazgeç butonu kaldır, ekranda başka
+  // yere dokunduğunda iptal etmiş olsun"] Buton kaldırıldı — iptal artık
+  // attachBoardListener()'daki belge-seviyesi "dışına dokunma" dinleyicisi
+  // (_cancelPendingOptionsIfOutside) ile yapılıyor.
 }
 
 function renderStatusArea() {

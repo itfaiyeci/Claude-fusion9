@@ -688,12 +688,6 @@ body { margin:0; background: #0B0D1A; /*base64-bg:/9j/4AAQSkZJRgABAQAAAQABAAD/2w
 .f9-op-sym2  { font-size:15px; font-weight:700; color:#AFA9EC; min-width:14px; text-align:center; }
 .f9-op-arr2  { font-size:12px; color:#3A3E60; }
 .f9-op-res2  { display:flex; align-items:center; justify-content:center; min-width:36px; }
-.f9-cancel-btn {
-  display:block; width:100%; padding:7px; background:transparent;
-  border:1px solid #2A2D50; border-radius:8px; color:#7A8BAB;
-  font-size:12px; cursor:pointer; text-align:center;
-}
-.f9-cancel-btn:hover { border-color:#E0473C; color:#E0473C; }
 .f9-board {
   display:grid; grid-template-columns: repeat(8, 1fr); gap:2px;
   background: linear-gradient(145deg, #0A0C1A 0%, #0D0F1E 100%);
@@ -927,12 +921,6 @@ body { margin:0; background: #0B0D1A; /*base64-bg:/9j/4AAQSkZJRgABAQAAAQABAAD/2w
 .f9-op-symbol { color:#AFA9EC; font-size:16px; font-weight:600; }
 .f9-op-arrow  { color:#6B6580; font-size:12px; }
 .f9-op-result { font-weight:700; font-size:clamp(24px,6vw,32px); line-height:1; }
-.f9-cancel-btn {
-  width:100%; text-align:center; padding:8px; font-size:12px;
-  background:transparent; border:1px solid #333; border-radius:8px;
-  color:#A89B89; cursor:pointer;
-}
-.f9-cancel-btn:hover { border-color:#E0473C; color:#E0473C; }
 
 .f9-overlay { background:var(--f9-surface); border-radius:12px; padding:20px; text-align:center; margin-bottom:14px; border:0.5px solid var(--f9-border); }
 .f9-overlay-won { border-color: var(--f9-accent); }
