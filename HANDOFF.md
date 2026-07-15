@@ -4,6 +4,53 @@
 > oturum-oturum geçmiş için `README.md`'ye bak (1100+ satır, tüm
 > kararların gerekçeleri var) — ama önce bunu oku, hızlı yönelim için.
 
+## 🆕 EN SON DURUM (Oturum 94 sonu itibariyle)
+
+**GitHub:** `itfaiyeci/Claude-fusion9`, `main` dalı, en son commit `c86c6df`.
+Repo'yu `git clone` ile çekip `node build/build.js` çalıştırınca
+`fusion9_clean.html` üretiliyor — bu, oyunun tam/çalışan hâli.
+
+**Bu uzun oturumda (61-94) yapılanların özeti:**
+- **Şekil/spawn düzeltmeleri:** b4_07 gerçek aynaya çevrildi, b5_11/12
+  spawn değiştirildi — 48 modelin TAMAMI kullanıcı onaylı.
+- **Performans:** `F9Debug.log()` artık kapalıyken (gerçek oyuncularda
+  varsayılan) gereksiz iş yapmıyor; artık kullanılmayan sayı görselleri
+  (47.6KB) silindi.
+- **Öğretim müfredatı:** İlk 10 bölüm artık tek-mekanik odaklı ders
+  (bölüm 1-5 doğrudan oluşturma, 6-10 terfi), o bölümlerde engel
+  yoğunluğu ciddi düşürüldü.
+- **Etkileşim:** Tıkla-tıkla'dan sürükle-bırak'a geçildi (Pointer
+  Events), "Vazgeç" butonu kaldırıldı (dışarı dokununca iptal).
+- **Game Feel (Oturum 68-86, en yoğun kısım):** Düz birleştirmede
+  (eşleşme olmasa bile) artık görsel tepki var — 4x4 "matrix" parçacık
+  grid'i + beyaz parlama + dalgalanma halkası + çevre hücre aydınlatma
+  (mesafeyle azalan, "su dalgası" hissi) + sayının kendi üzerinde ayrı
+  bir halka+ışın+kıvılcım paketi (`fx/number-fx.js`, ayrı dosya).
+  **Denendi ve GERİ ALINDI:** sayıları balon yapmak (2 farklı stil),
+  sayılara kalıcı glow+%10 büyütme — kullanıcı beğenmedi, revert edildi.
+- **🔴 Bu oturumda öğrenilen 3 KRİTİK, TEKRARLANMAMASI GEREKEN ders**
+  (hepsi "Bulunmuş ve düzeltilmiş büyük hatalar" bölümünde detaylı):
+  1. **`render()` hücre efektlerini GÖRÜNMEDEN siliyor** — bir event
+     sonrası senkron render varsa, hücre stillemesini
+     `requestAnimationFrame` ile ertele, DOM'u o an yeniden sorgula.
+  2. **Opak `<img>`'in ARKASINA eklenen hiçbir şey görünmüyor** —
+     efektleri `appendChild` ile ÖNÜNE ekle.
+  3. **`transition`+değer değişikliğini AYNI JS turunda yapmak tarayıcıda
+     garanti değil** — `void el.offsetWidth` ile zorla reflow yap.
+- **Şekil/oyun sağlığı analizi (Oturum 89-94):** 5-7'li şekillerin
+  (%46'sı) casual/normal/pro'da (22 saat oynanışta bile) HİÇ oluşmadığı
+  ölçüldü. Kök neden: level/engel/hamle bütçesi DEĞİL (yeni
+  `target-shape-bot.js` ile 36/36 %100 doğrulandı gerçek koşullarda) —
+  sadece botun/oyuncunun çok adımlı plan yapmaması. **Kullanıcı kararı:
+  oyuncuya yönelik bir çözüm EKLENMEYECEK**, bu sadece bizim iç "oyun
+  sağlığı" takibimiz (`shape-timing-report.js`, `target-shape-bot.js`,
+  debug panelindeki "🔷 Şekiller" sekmesi — 48 şeklin canlı tamamlanma
+  yüzdesini gösterir, sadece dev, oyuncu görmez).
+
+**Açık kalan/karar bekleyen:** Ses (gerçek ses dosyalarına geçiş,
+kullanıcı henüz kaynak sağlamadı), Emotion System (hiç başlanmadı),
+level 101+ için müfredat/eğri yok.
+
 ## Proje nedir
 
 Fusion9: sayı tabanlı bir match-3 oyunu (iki bitişik hücreyi değiştirip
