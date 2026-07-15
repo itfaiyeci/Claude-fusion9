@@ -661,8 +661,22 @@ const F9Debug = (() => {
       return;
     }
     const GRID = 8;
+    // [Oturum 94 — kullanıcı bulgusu: "neden 36, 48 değil"] ALL_FIXED_SHAPES
+    // sadece 36 sabit şekli içeriyor — 12 çizgi varyasyonu (line3/4/5,
+    // yatay+dikey) rules/matchRules.js'te AYRI sabitler olarak duruyor,
+    // ALL_FIXED_SHAPES'e dahil değiller (bkz. debug/build-shape-lab.js'in
+    // "48 model = 36 sabit + 12 çizgi" yorumu). Artık ikisi birden taranıyor.
+    const lineShapes = (typeof LINE_3_H !== "undefined") ? [
+      { name: "line3_h", group: "a", cells: LINE_3_H },
+      { name: "line3_v", group: "a", cells: LINE_3_V },
+      { name: "line4_h", group: "b", cells: LINE_4_H },
+      { name: "line4_v", group: "b", cells: LINE_4_V },
+      { name: "line5_h", group: "c", cells: LINE_5_H },
+      { name: "line5_v", group: "c", cells: LINE_5_V },
+    ] : [];
+    const allShapes = [...ALL_FIXED_SHAPES, ...lineShapes];
     const rows = [];
-    for (const shape of ALL_FIXED_SHAPES) {
+    for (const shape of allShapes) {
       const maxDr = Math.max(...shape.cells.map(([r]) => r));
       const maxDc = Math.max(...shape.cells.map(([, c]) => c));
       let best = null;
@@ -693,7 +707,7 @@ const F9Debug = (() => {
     }).join("");
 
     _shapesPanel.innerHTML = `
-      <div style="color:#6B7A9B;font-size:10px;margin-bottom:6px">O anki tahta — 36 sabit şeklin en yüksek tamamlanma oranları (sadece dev, oyuncu görmez)</div>
+      <div style="color:#6B7A9B;font-size:10px;margin-bottom:6px">O anki tahta — 48 şeklin (36 sabit + 12 çizgi) en yüksek tamamlanma oranları (sadece dev, oyuncu görmez)</div>
       ${rowsHtml || '<div style="color:#6B7A9B;font-size:11px;padding:8px">Tahtada hiç 9 yok — hiçbir şekil ilerlemesi yok.</div>'}
     `;
   }
