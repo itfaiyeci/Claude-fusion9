@@ -24,7 +24,7 @@ const F9Debug = (() => {
   try { ENABLED = localStorage.getItem("f9debug") === "1"; } catch(e) {}
   const MAX_LOGS = 200;
   const logs = [];
-  let _panel = null, _list = null, _badge = null, _statsPanel = null, _dirPanel = null;
+  let _panel = null, _list = null, _badge = null, _statsPanel = null, _dirPanel = null, _shapesPanel = null;
   let errorCount = 0, warnCount = 0;
 
   const COLORS = {
@@ -148,7 +148,8 @@ const F9Debug = (() => {
     hdr.innerHTML = `
       <button id="f9-tab-log"   onclick="F9Debug.switchTab('log')"   style="font-size:10px;font-weight:700;padding:3px 10px;background:#A78BFA22;border:1px solid #A78BFA55;color:#A78BFA;border-radius:6px;cursor:pointer;margin-right:4px">🐛 Log</button>
       <button id="f9-tab-stats" onclick="F9Debug.switchTab('stats')" style="font-size:10px;font-weight:700;padding:3px 10px;background:transparent;border:1px solid #2A2D48;color:#6B7A9B;border-radius:6px;cursor:pointer;margin-right:4px">📊 Analiz</button>
-      <button id="f9-tab-dir"   onclick="F9Debug.switchTab('dir')"   style="font-size:10px;font-weight:700;padding:3px 10px;background:transparent;border:1px solid #2A2D48;color:#6B7A9B;border-radius:6px;cursor:pointer">🤖 Direktör</button>
+      <button id="f9-tab-dir"   onclick="F9Debug.switchTab('dir')"   style="font-size:10px;font-weight:700;padding:3px 10px;background:transparent;border:1px solid #2A2D48;color:#6B7A9B;border-radius:6px;cursor:pointer;margin-right:4px">🤖 Direktör</button>
+      <button id="f9-tab-shapes" onclick="F9Debug.switchTab('shapes')" style="font-size:10px;font-weight:700;padding:3px 10px;background:transparent;border:1px solid #2A2D48;color:#6B7A9B;border-radius:6px;cursor:pointer">🔷 Şekiller</button>
       <span id="f9d-errcnt" style="font-size:10px;color:#E04B4B;margin-left:6px"></span>
       <span style="flex:1"></span>
       <button onclick="F9Debug.snapshot()" style="font-size:9px;padding:2px 6px;background:#1A1D38;border:1px solid #2A2D48;color:#9AAABB;border-radius:4px;cursor:pointer">📋 Kopyala</button>
@@ -188,6 +189,14 @@ const F9Debug = (() => {
     _dirPanel.id = "f9-dir-panel";
     _dirPanel.style.cssText = `flex:1;overflow-y:auto;overflow-x:hidden;display:none;padding:8px`;
     _panel.appendChild(_dirPanel);
+
+    // [Oturum 93 — kullanıcı isteği: "debug panelinde canlı şekil
+    // analizi aracı, sadece bizim için (dev-only), oyuncuya yönelik
+    // DEĞİL"] Şekiller paneli — log paneline paralel, başlangıçta gizli.
+    _shapesPanel = document.createElement("div");
+    _shapesPanel.id = "f9-shapes-panel";
+    _shapesPanel.style.cssText = `flex:1;overflow-y:auto;overflow-x:hidden;display:none;padding:8px`;
+    _panel.appendChild(_shapesPanel);
 
     document.body.appendChild(btn);
     document.body.appendChild(_panel);
@@ -250,15 +259,17 @@ const F9Debug = (() => {
     const logBtn   = document.getElementById("f9-tab-log");
     const statsBtn = document.getElementById("f9-tab-stats");
     const dirBtn   = document.getElementById("f9-tab-dir");
+    const shapesBtn = document.getElementById("f9-tab-shapes");
     const filter   = document.getElementById("f9d-filter");
 
     // Hepsini sıfırla
-    [logBtn, statsBtn, dirBtn].forEach(b => {
+    [logBtn, statsBtn, dirBtn, shapesBtn].forEach(b => {
       if (b) { b.style.background="transparent"; b.style.color="#6B7A9B"; b.style.borderColor="#2A2D48"; }
     });
     _list.style.display = "none";
     if (_statsPanel) _statsPanel.style.display = "none";
     if (_dirPanel)   _dirPanel.style.display   = "none";
+    if (_shapesPanel) _shapesPanel.style.display = "none";
     if (filter) filter.style.display = "none";
 
     if (tab === "log") {
@@ -271,6 +282,9 @@ const F9Debug = (() => {
     } else if (tab === "dir") {
       if (_dirPanel) { _dirPanel.style.display = "block"; _renderDirector(); }
       if (dirBtn) { dirBtn.style.background="#4FB87A22"; dirBtn.style.color="#4FB87A"; dirBtn.style.borderColor="#4FB87A55"; }
+    } else if (tab === "shapes") {
+      if (_shapesPanel) { _shapesPanel.style.display = "block"; _renderShapes(); }
+      if (shapesBtn) { shapesBtn.style.background="#E0B23C22"; shapesBtn.style.color="#E0B23C"; shapesBtn.style.borderColor="#E0B23C55"; }
     }
   }
 
@@ -461,6 +475,7 @@ const F9Debug = (() => {
 
     // Direktör sekmesi açıksa canlı güncelle
     if (_currentTab === "dir" && _dirPanel) _renderDirector();
+    if (_currentTab === "shapes" && _shapesPanel) _renderShapes();
   }
 
   // ── Level sonu ─────────────────────────────────────
@@ -495,6 +510,7 @@ const F9Debug = (() => {
     _dir.current = null;
     _dirSave();
     if (_currentTab === "dir" && _dirPanel) _renderDirector();
+    if (_currentTab === "shapes" && _shapesPanel) _renderShapes();
   }
 
   // ── Sorun tespiti ──────────────────────────────────
@@ -626,6 +642,62 @@ const F9Debug = (() => {
   }
 
   // ── Direktör paneli render ──────────────────────────
+  // [Oturum 93 — kullanıcı isteği: "debug panelinde canlı şekil
+  // analizi aracı, sadece bizim için (dev-only)"] O anki tahtadaki
+  // TÜM 36 sabit şeklin (ALL_FIXED_SHAPES) her olası konumdaki
+  // TAMAMLANMA ORANINI hesaplayıp, en yüksekten düşüğe sıralı listeler.
+  // Oyuncuya YÖNELİK bir özellik DEĞİL — sadece debug panelinde,
+  // yalnızca geliştirici/QA görür (bkz. HANDOFF.md Oturum 92 notu).
+  const GROUP_LABEL = { a: "3'lü", b: "4'lü", c: "5'li", d: "6'lı", e: "7'li" };
+  function _renderShapes() {
+    if (!_shapesPanel) return;
+    const gc = state?.gc;
+    if (!gc || !gc.board) {
+      _shapesPanel.innerHTML = `<div style="color:#6B7A9B;font-size:11px;padding:8px">Aktif oyun yok (gc null) — bir level başlat.</div>`;
+      return;
+    }
+    if (typeof ALL_FIXED_SHAPES === "undefined") {
+      _shapesPanel.innerHTML = `<div style="color:#E04B4B;font-size:11px;padding:8px">ALL_FIXED_SHAPES bulunamadı.</div>`;
+      return;
+    }
+    const GRID = 8;
+    const rows = [];
+    for (const shape of ALL_FIXED_SHAPES) {
+      const maxDr = Math.max(...shape.cells.map(([r]) => r));
+      const maxDc = Math.max(...shape.cells.map(([, c]) => c));
+      let best = null;
+      for (let br = 0; br <= GRID - 1 - maxDr; br++) {
+        for (let bc = 0; bc <= GRID - 1 - maxDc; bc++) {
+          const absCells = shape.cells.map(([r, c]) => [br + r, bc + c]);
+          const nineCells = absCells.filter(([r, c]) => gc.board.getCell(r, c) === 9);
+          const ratio = nineCells.length / shape.cells.length;
+          if (!best || ratio > best.ratio) best = { ratio, cells: absCells, nineCount: nineCells.length };
+        }
+      }
+      if (best && best.nineCount > 0) rows.push({ name: shape.name, group: shape.group, ...best });
+    }
+    rows.sort((a, b) => b.ratio - a.ratio);
+
+    const rowsHtml = rows.slice(0, 30).map(r => {
+      const pct = Math.round(r.ratio * 100);
+      const barColor = r.ratio >= 1 ? "#4FB87A" : r.ratio >= 0.5 ? "#E0B23C" : "#6B7A9B";
+      return `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #1A1D38">
+        <span style="width:34px;color:#9AAABB;font-size:10px">[${GROUP_LABEL[r.group]||r.group}]</span>
+        <span style="width:56px;color:#E8E2D8;font-size:10px">${r.name}</span>
+        <div style="flex:1;height:8px;background:#1A1D38;border-radius:4px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${barColor}"></div>
+        </div>
+        <span style="width:34px;text-align:right;color:${barColor};font-size:10px;font-weight:700">${pct}%</span>
+        <span style="width:26px;text-align:right;color:#6B7A9B;font-size:9px">${r.nineCount}/${r.cells.length}</span>
+      </div>`;
+    }).join("");
+
+    _shapesPanel.innerHTML = `
+      <div style="color:#6B7A9B;font-size:10px;margin-bottom:6px">O anki tahta — 36 sabit şeklin en yüksek tamamlanma oranları (sadece dev, oyuncu görmez)</div>
+      ${rowsHtml || '<div style="color:#6B7A9B;font-size:11px;padding:8px">Tahtada hiç 9 yok — hiçbir şekil ilerlemesi yok.</div>'}
+    `;
+  }
+
   function _renderDirector() {
     if (!_dirPanel) return;
     const lv   = _dir.current;
@@ -1092,6 +1164,7 @@ const F9Debug = (() => {
     analyticsLevelEnd: (won, gc, dda) => _analyticsOnLevelEnd(won, gc, dda),
     renderStats: () => { if (_currentTab === "stats") _renderStats(); },
     renderDirector: () => { if (_currentTab === "dir") _renderDirector(); },
+    renderShapes: () => { if (_currentTab === "shapes") _renderShapes(); },
     dirHealth:  () => _dirHealthScore(),
     dirNotes:   () => _dirNotes(),
     dirActive:  () => _dir.current ? {
