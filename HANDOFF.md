@@ -225,6 +225,21 @@ README.md Oturum 29 için tam kıyas tablosu ve gerekçe.
 
 ## Bulunmuş ve düzeltilmiş büyük hatalar (tekrar yapma)
 
+- **📌 NOT (Oturum 92) — Şekil analiz araçları (`shape-timing-report.js`,
+  `target-shape-bot.js`, `shape-coverage-report.js`) SADECE BİZİM
+  (geliştirici/QA) iç kontrolümüz için — OYUNCUYA YÖNELİK bir özellik
+  DEĞİL.** Oturum 90-92'de bulundu: casual/normal/pro botlar (ve
+  muhtemelen çoğu gerçek oyuncu) 5-7'li şekilleri neredeyse hiç kazara
+  üretmiyor — sebep level tasarımı/engel/hamle bütçesi DEĞİL (bunlar
+  `target-shape-bot.js` ile 36/36 %100 doğrulandı), sadece çok adımlı
+  plan yapmama. **Kullanıcı kararı: bunun için oyuncuya yönelik bir
+  "kilit/koru" mekaniği YA DA zorlayıcı bir ipucu EKLENMEYECEK** —
+  pasif fırsat ipucu (Oturum 90, `_findBigShapeOpportunity`) kaldı,
+  ama bu araçların ürettiği veri sadece bizim "oyun sağlığı" takibimiz
+  için, oyunun kendisine yeni bir oyuncu özelliği olarak YANSITILMAYACAK.
+  İleride biri "büyük şekiller hiç oluşmuyor, düzeltelim" derse, önce bu
+  notu ve kullanıcının kararını hatırla.
+
 - **🔴 KRİTİK (Oturum 77) — Hücre bazlı efektler `render()` tarafından
   GÖRÜNMEDEN siliniyordu.** `flow/rewardFlow.js executeMove()` içinde bir
   event (örn. "PlainMerge") yayınlandıktan HEMEN SONRA, AYNI senkron JS
